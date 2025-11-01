@@ -178,12 +178,15 @@ export default function Auth() {
           </form>
 
           <div className="rounded-lg border border-border/40 bg-muted/30 p-4">
-            <p className="text-xs font-medium text-foreground mb-2">Test Accounts:</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
+            <p className="text-xs font-medium text-foreground mb-2">⚠️ First Time Setup - Create Test Accounts:</p>
+            <div className="space-y-1 text-xs text-muted-foreground mb-3">
               <p>👨‍🏫 Teacher: teacher@teacher.uni / Teacher2025!</p>
               <p>👨‍🎓 TA: ta@ta.uni / TA2025!</p>
               <p>🎓 Student: student@student.uni / Student2025!</p>
             </div>
+            <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
+              👆 Use the Sign Up button above to create these accounts first, then you can Sign In.
+            </p>
           </div>
         </CardContent>
       </Card>
