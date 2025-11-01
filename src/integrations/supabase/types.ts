@@ -111,6 +111,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      users_share_course: {
+        Args: { _user_id1: string; _user_id2: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "ta" | "teacher" | "student"
