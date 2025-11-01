@@ -83,7 +83,7 @@ export default function Auth() {
               <label className="text-sm font-medium text-foreground">Email</label>
               <Input
                 type="email"
-                placeholder="your.email@university.uni"
+                placeholder="name@role.uni"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -120,9 +120,9 @@ export default function Auth() {
           <div className="rounded-lg border border-border/40 bg-muted/30 p-4">
             <p className="text-xs font-medium text-foreground mb-2">Test Accounts:</p>
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>👨‍🏫 Teacher: teacher@university.uni / Teacher2025!</p>
-              <p>👨‍🎓 TA: ta@university.uni / TA2025!</p>
-              <p>🎓 Student: student@university.uni / Student2025!</p>
+              <p>👨‍🏫 Teacher: teacher@teacher.uni / Teacher2025!</p>
+              <p>👨‍🎓 TA: ta@ta.uni / TA2025!</p>
+              <p>🎓 Student: student@student.uni / Student2025!</p>
             </div>
           </div>
         </CardContent>

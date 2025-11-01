@@ -1,18 +1,18 @@
 # Test Accounts for Prototyping
 
 ## Teacher Account
-- **Email:** teacher@university.uni
+- **Email:** teacher@teacher.uni
 - **Password:** Teacher2025!
 - **Role:** Teacher (full access to all courses and admin features)
 
 ## Teaching Assistant (TA) Account
-- **Email:** ta@university.uni
+- **Email:** ta@ta.uni
 - **Password:** TA2025!
 - **Role:** TA (assigned to specific courses)
 - **Assigned Courses:** BK80A4000
 
 ## Student Account
-- **Email:** student@university.uni
+- **Email:** student@student.uni
 - **Password:** Student2025!
 - **Role:** Student (can view own courses and materials)
 
