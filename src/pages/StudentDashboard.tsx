@@ -6,7 +6,7 @@ import CourseDetailView from "@/components/CourseDetailView";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface UserCourseRole {
-  [courseId: string]: boolean; // true if TA, false if student
+  [courseId: string]: 'teacher' | 'ta' | 'student';
 }
 
 export default function StudentDashboard() {
@@ -46,17 +46,23 @@ export default function StudentDashboard() {
 
   const loadUserRoles = async (userId: string) => {
     try {
-      const { data: taRoles, error } = await supabase
+      const { data: allRoles, error } = await supabase
         .from('user_roles')
-        .select('course_id')
-        .eq('student_id', userId)
-        .eq('role', 'ta');
+        .select('course_id, role')
+        .eq('student_id', userId);
 
       if (error) throw error;
 
       const rolesMap: UserCourseRole = {};
-      taRoles?.forEach(role => {
-        rolesMap[role.course_id] = true;
+      allRoles?.forEach(role => {
+        // Prioritize teacher > ta > student
+        if (role.role === 'teacher') {
+          rolesMap[role.course_id] = 'teacher';
+        } else if (role.role === 'ta' && rolesMap[role.course_id] !== 'teacher') {
+          rolesMap[role.course_id] = 'ta';
+        } else if (!rolesMap[role.course_id]) {
+          rolesMap[role.course_id] = 'student';
+        }
       });
 
       setUserRoles(rolesMap);
@@ -78,7 +84,8 @@ export default function StudentDashboard() {
       {selectedCourse ? (
         <CourseDetailView 
           courseId={selectedCourse}
-          isTA={userRoles[selectedCourse] || false}
+          isTA={userRoles[selectedCourse] === 'ta' || userRoles[selectedCourse] === 'teacher'}
+          isTeacher={userRoles[selectedCourse] === 'teacher'}
           onBack={() => setSelectedCourse(null)}
         />
       ) : (

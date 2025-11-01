@@ -13,10 +13,11 @@ import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, A
 interface CourseDetailViewProps {
   courseId: string;
   isTA: boolean; // true = teacher/TA with full access, false = student with limited access
+  isTeacher?: boolean; // true = teacher (can manage roles), false/undefined = TA or student
   onBack: () => void;
 }
 
-export default function CourseDetailView({ courseId, isTA, onBack }: CourseDetailViewProps) {
+export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: CourseDetailViewProps) {
   const [activeTab, setActiveTab] = useState(isTA ? "analysis" : "assignments");
   const [course, setCourse] = useState<{ name: string; department: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,7 +89,7 @@ export default function CourseDetailView({ courseId, isTA, onBack }: CourseDetai
             <FileText className="h-3.5 w-3.5" />
             Assignments
           </TabsTrigger>
-          {isTA && (
+          {isTeacher && (
             <TabsTrigger value="roles" className="gap-1.5 text-xs">
               <Users className="h-3.5 w-3.5" />
               Roles
@@ -198,7 +199,7 @@ export default function CourseDetailView({ courseId, isTA, onBack }: CourseDetai
           </Card>
         </TabsContent>
 
-        {isTA && (
+        {isTeacher && (
           <TabsContent value="roles" className="space-y-6 mt-8">
           <Card className="border-border/40">
             <CardHeader>

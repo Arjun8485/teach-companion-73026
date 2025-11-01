@@ -69,6 +69,7 @@ export default function TADashboard() {
         <CourseDetailView 
           courseId={selectedCourse}
           isTA={true}
+          isTeacher={isTeacher}
           onBack={() => setSelectedCourse(null)}
         />
       ) : (
