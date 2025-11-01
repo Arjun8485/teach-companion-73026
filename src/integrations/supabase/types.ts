@@ -23,6 +23,8 @@ export type Database = {
           due_date: string | null
           file_url: string | null
           id: string
+          max_marks: number | null
+          questions: Json | null
           title: string
         }
         Insert: {
@@ -33,6 +35,8 @@ export type Database = {
           due_date?: string | null
           file_url?: string | null
           id?: string
+          max_marks?: number | null
+          questions?: Json | null
           title: string
         }
         Update: {
@@ -43,6 +47,8 @@ export type Database = {
           due_date?: string | null
           file_url?: string | null
           id?: string
+          max_marks?: number | null
+          questions?: Json | null
           title?: string
         }
         Relationships: [
@@ -106,6 +112,70 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      submissions: {
+        Row: {
+          assignment_id: string
+          completed_questions: Json | null
+          file_url: string | null
+          graded_at: string | null
+          graded_by: string | null
+          grading_finalized: boolean | null
+          id: string
+          question_marks: Json | null
+          student_id: string
+          submitted_at: string | null
+          total_marks: number | null
+        }
+        Insert: {
+          assignment_id: string
+          completed_questions?: Json | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          grading_finalized?: boolean | null
+          id?: string
+          question_marks?: Json | null
+          student_id: string
+          submitted_at?: string | null
+          total_marks?: number | null
+        }
+        Update: {
+          assignment_id?: string
+          completed_questions?: Json | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          grading_finalized?: boolean | null
+          id?: string
+          question_marks?: Json | null
+          student_id?: string
+          submitted_at?: string | null
+          total_marks?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

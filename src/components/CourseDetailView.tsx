@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
 import StudentTAList from "./StudentTAList";
-import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, ArrowLeft, Trash2, Download } from "lucide-react";
+import StudentAssignmentView from "./StudentAssignmentView";
+import TeacherAssignmentCreate from "./TeacherAssignmentCreate";
+import TAGradingView from "./TAGradingView";
+import { BarChart3, Users, FileText, CheckCircle2, TrendingUp, ArrowLeft, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 
 interface CourseDetailViewProps {
   courseId: string;
@@ -23,18 +23,11 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
   const [activeTab, setActiveTab] = useState(isTA ? "analysis" : "assignments");
   const [course, setCourse] = useState<{ name: string; department: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [assignmentTitle, setAssignmentTitle] = useState("");
-  const [assignmentDescription, setAssignmentDescription] = useState("");
-  const [assignmentDueDate, setAssignmentDueDate] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [assignmentKey, setAssignmentKey] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     loadCourse();
-    loadAssignments();
   }, [courseId]);
 
   const loadCourse = async () => {
@@ -54,132 +47,8 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
     }
   };
 
-  const loadAssignments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('*, profiles:created_by(full_name)')
-        .eq('course_id', courseId)
-        .order('due_date', { ascending: true });
-
-      if (error) throw error;
-      setAssignments(data || []);
-    } catch (error) {
-      console.error('Error loading assignments:', error);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        toast({
-          title: "Error",
-          description: "Please select a PDF file",
-          variant: "destructive",
-        });
-        return;
-      }
-      setUploadedFile(file);
-    }
-  };
-
-  const handleCreateAssignment = async () => {
-    if (!assignmentTitle.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter an assignment title",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      let fileUrl = null;
-
-      // Upload file if present
-      if (uploadedFile) {
-        const fileExt = uploadedFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('assignment-files')
-          .upload(fileName, uploadedFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('assignment-files')
-          .getPublicUrl(fileName);
-
-        fileUrl = publicUrl;
-      }
-
-      const { error } = await supabase
-        .from('assignments')
-        .insert({
-          course_id: courseId,
-          title: assignmentTitle,
-          description: assignmentDescription,
-          due_date: assignmentDueDate || null,
-          created_by: user.id,
-          file_url: fileUrl,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Assignment created successfully",
-      });
-
-      setAssignmentTitle("");
-      setAssignmentDescription("");
-      setAssignmentDueDate("");
-      setUploadedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      loadAssignments();
-    } catch (error: any) {
-      console.error('Error creating assignment:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create assignment",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteAssignment = async (assignmentId: string) => {
-    if (!confirm("Are you sure you want to delete this assignment?")) return;
-
-    try {
-      const { error } = await supabase
-        .from('assignments')
-        .delete()
-        .eq('id', assignmentId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Assignment deleted successfully",
-      });
-
-      loadAssignments();
-    } catch (error: any) {
-      console.error('Error deleting assignment:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete assignment",
-        variant: "destructive",
-      });
-    }
+  const handleAssignmentCreated = () => {
+    setAssignmentKey(prev => prev + 1);
   };
 
   if (loading) {
@@ -308,135 +177,16 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
         )}
 
         <TabsContent value="assignments" className="space-y-6 mt-8">
-          {isTeacher && (
-            <Card className="border-border/40">
-              <CardHeader>
-                <CardTitle className="text-lg font-medium">Create New Assignment</CardTitle>
-                <CardDescription className="text-sm">Publish exercises for students</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assignment Title</label>
-                  <Input 
-                    placeholder="e.g., Problem Set 3: Dynamics" 
-                    className="h-10 border-border/40"
-                    value={assignmentTitle}
-                    onChange={(e) => setAssignmentTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</label>
-                  <Textarea 
-                    placeholder="Describe the assignment objectives and requirements..." 
-                    rows={4} 
-                    className="border-border/40"
-                    value={assignmentDescription}
-                    onChange={(e) => setAssignmentDescription(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</label>
-                  <Input 
-                    type="date" 
-                    className="h-10 border-border/40"
-                    value={assignmentDueDate}
-                    onChange={(e) => setAssignmentDueDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Upload PDF (Optional)</label>
-                  <div className="flex flex-col gap-2">
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileSelect}
-                      className="h-10 border-border/40"
-                    />
-                    {uploadedFile && (
-                      <div className="text-xs text-muted-foreground flex items-center gap-2">
-                        <FileText className="h-3 w-3" />
-                        {uploadedFile.name}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Button 
-                  className="w-full h-10" 
-                  onClick={handleCreateAssignment}
-                  disabled={submitting}
-                >
-                  {submitting ? "Publishing..." : "Publish Assignment"}
-                </Button>
-              </CardContent>
-            </Card>
+          {isTeacher ? (
+            <>
+              <TeacherAssignmentCreate courseId={courseId} onSuccess={handleAssignmentCreated} />
+              <TAGradingView key={assignmentKey} courseId={courseId} />
+            </>
+          ) : isTA ? (
+            <TAGradingView key={assignmentKey} courseId={courseId} />
+          ) : (
+            <StudentAssignmentView key={assignmentKey} courseId={courseId} />
           )}
-
-          <Card className="border-border/40">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Assignments</CardTitle>
-              <CardDescription className="text-sm">
-                {assignments.length === 0 
-                  ? "No assignments yet" 
-                  : `${assignments.length} assignment${assignments.length !== 1 ? 's' : ''}`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {assignments.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  No assignments have been created yet
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {assignments.map((assignment) => (
-                    <div 
-                      key={assignment.id}
-                      className="flex items-start justify-between rounded-md border border-border/40 bg-card/50 p-4"
-                    >
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-foreground mb-1">{assignment.title}</h4>
-                        {assignment.description && (
-                          <p className="text-xs text-muted-foreground mb-2">{assignment.description}</p>
-                        )}
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                          {assignment.due_date && (
-                            <span>Due: {format(new Date(assignment.due_date), 'MMM d, yyyy')}</span>
-                          )}
-                          {assignment.profiles?.full_name && (
-                            <>
-                              <span>•</span>
-                              <span>By: {assignment.profiles.full_name}</span>
-                            </>
-                          )}
-                        </div>
-                        {assignment.file_url && (
-                          <a 
-                            href={assignment.file_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                          >
-                            <Download className="h-3 w-3" />
-                            Download PDF
-                          </a>
-                        )}
-                      </div>
-                      {isTeacher && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteAssignment(assignment.id)}
-                          className="ml-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {isTeacher && (
