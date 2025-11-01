@@ -22,13 +22,12 @@ export default function Auth() {
           .select('role')
           .eq('student_id', session.user.id);
 
-        const hasTA = roles?.some((r: any) => r.role === 'ta');
         const hasTeacher = roles?.some((r: any) => r.role === 'teacher');
 
-        if (hasTA || hasTeacher) {
+        if (hasTeacher) {
           navigate("/ta");
         } else {
-          navigate("/");
+          navigate("/student");
         }
       }
     });
@@ -58,10 +57,10 @@ export default function Auth() {
 
         toast.success("Logged in successfully!");
         
-        if (hasTA || hasTeacher) {
+        if (hasTeacher) {
           navigate("/ta");
         } else {
-          navigate("/");
+          navigate("/student");
         }
       }
     } catch (error: any) {
