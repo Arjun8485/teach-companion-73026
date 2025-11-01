@@ -14,7 +14,7 @@ You need to create three test accounts with different roles:
 
 2. **TA Account**
    - Email: `ta@school.edu`
-   - Password: `ta123`
+   - Password: `TApass123!`
    - Role: `ta`
    - Access: TA dashboard
 
@@ -33,8 +33,8 @@ Since email confirmation is disabled for testing, you can create accounts direct
 1. Go to `/auth` route in your app
 2. For each test account:
    - Enter the email and password
-   - Click "Sign In" (this will show an error since the account doesn't exist yet)
-   - You'll need to use the Supabase backend to create these users manually
+   - Click "Sign Up" to create the account
+   - The system will automatically create a profile via the database trigger
 
 ### Step 2: Assign Roles
 
