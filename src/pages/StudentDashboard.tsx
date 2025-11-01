@@ -27,6 +27,19 @@ export default function StudentDashboard() {
       return;
     }
 
+    // Check if user is a teacher - if so, redirect to teacher dashboard
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('student_id', session.user.id);
+
+    const hasTeacher = roles?.some((r: any) => r.role === 'teacher');
+    
+    if (hasTeacher) {
+      navigate("/ta");
+      return;
+    }
+
     await loadUserRoles(session.user.id);
     setLoading(false);
   };
