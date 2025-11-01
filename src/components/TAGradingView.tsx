@@ -152,25 +152,20 @@ export default function TAGradingView({ courseId, isTeacher = false }: TAGrading
       const bucketId = pathParts[pathParts.indexOf('public') + 1];
       const path = pathParts.slice(pathParts.indexOf(bucketId) + 1).join('/');
 
-      // Download the file
+      // Get signed URL (valid for 1 hour)
       const { data, error } = await supabase.storage
         .from(bucketId)
-        .download(path);
+        .createSignedUrl(path, 3600);
 
       if (error) throw error;
 
-      // Create blob URL and open in new tab
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
-
-      // Clean up blob URL after a delay
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      // Open signed URL in new tab
+      window.open(data.signedUrl, '_blank');
     } catch (error: any) {
       console.error('Error viewing PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to open PDF. Please try again.",
+        description: "Failed to open PDF. Please try disabling your ad blocker for this site.",
         variant: "destructive",
       });
     }
