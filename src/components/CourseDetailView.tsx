@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
+import StudentTAList from "./StudentTAList";
 import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp } from "lucide-react";
 
 interface CourseDetailViewProps {
@@ -140,43 +141,11 @@ export default function CourseDetailView({ courseName, courseCode }: CourseDetai
         <TabsContent value="roles" className="space-y-6 mt-8">
           <Card className="border-border/40">
             <CardHeader>
-              <CardTitle className="text-lg font-medium">Manage Course Team</CardTitle>
-              <CardDescription className="text-sm">Add TAs, instructors, and manage permissions</CardDescription>
+              <CardTitle className="text-lg font-medium">Teaching Assistant Assignment</CardTitle>
+              <CardDescription className="text-sm">Select students to assign as TAs for this course</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Address</label>
-                <Input placeholder="ta@lut.fi" type="email" className="h-10 border-border/40" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Role</label>
-                <select className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm hover:bg-muted transition-colors">
-                  <option>Teaching Assistant</option>
-                  <option>Co-Instructor</option>
-                  <option>Grader</option>
-                </select>
-              </div>
-              <Button className="w-full h-10">Add Team Member</Button>
-
-              <div className="mt-8 space-y-3">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Current Team</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-3.5">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Anna Virtanen</p>
-                      <p className="text-xs text-muted-foreground">Teaching Assistant</p>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs">Remove</Button>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-3.5">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Mikko Järvinen</p>
-                      <p className="text-xs text-muted-foreground">Co-Instructor</p>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs">Remove</Button>
-                  </div>
-                </div>
-              </div>
+            <CardContent>
+              <StudentTAList courseCode={courseCode} />
             </CardContent>
           </Card>
         </TabsContent>
