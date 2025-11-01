@@ -14,10 +14,22 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check if already logged in and redirect to appropriate dashboard
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('student_id', session.user.id);
+
+        const hasTA = roles?.some(r => r.role === 'ta');
+        const hasTeacher = roles?.some(r => r.role === 'teacher');
+
+        if (hasTA || hasTeacher) {
+          navigate("/ta");
+        } else {
+          navigate("/");
+        }
       }
     });
   }, [navigate]);
@@ -27,15 +39,31 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      toast.success("Logged in successfully!");
-      navigate("/");
+      // Check user role and redirect accordingly
+      if (data.user) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('student_id', data.user.id);
+
+        const hasTA = roles?.some(r => r.role === 'ta');
+        const hasTeacher = roles?.some(r => r.role === 'teacher');
+
+        toast.success("Logged in successfully!");
+        
+        if (hasTA || hasTeacher) {
+          navigate("/ta");
+        } else {
+          navigate("/");
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to log in");
     } finally {
@@ -84,7 +112,13 @@ export default function Auth() {
       }
 
       toast.success("Account created successfully!");
-      navigate("/");
+      
+      // Redirect based on role
+      if (role === 'ta' || role === 'teacher') {
+        navigate("/ta");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
     } finally {
