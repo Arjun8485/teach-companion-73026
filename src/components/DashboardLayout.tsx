@@ -17,9 +17,10 @@ interface DashboardLayoutProps {
   children: ReactNode;
   selectedCourse?: string;
   onCourseSelect?: (courseId: string) => void;
+  userType?: 'student' | 'teacher';
 }
 
-export default function DashboardLayout({ children, selectedCourse, onCourseSelect }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, selectedCourse, onCourseSelect, userType = 'student' }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [userName, setUserName] = useState<string>("");
@@ -101,7 +102,9 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
             <GraduationCap className="h-6 w-6 text-primary" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground">{userName}</span>
-              <span className="text-xs text-muted-foreground">Student Dashboard</span>
+              <span className="text-xs text-muted-foreground">
+                {userType === 'teacher' ? "Teacher's Dashboard" : "Student Dashboard"}
+              </span>
             </div>
           </div>
 

@@ -12,7 +12,7 @@ import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, A
 
 interface CourseDetailViewProps {
   courseId: string;
-  isTA: boolean;
+  isTA: boolean; // true = teacher/TA with full access, false = student with limited access
   onBack: () => void;
 }
 
