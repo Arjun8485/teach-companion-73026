@@ -94,11 +94,32 @@ export default function TeacherAssignmentCreate({ courseId, onSuccess }: Teacher
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const totalMarks = questions.reduce((sum, q) => sum + q.max_marks, 0);
+
+      // First create the assignment to get the ID
+      const { data: newAssignment, error: insertError } = await supabase
+        .from('assignments')
+        .insert([{
+          course_id: courseId,
+          title,
+          description: description || null,
+          due_date: dueDate || null,
+          created_by: user.id,
+          file_url: null, // Will update after file upload
+          questions: questions as any,
+          max_marks: totalMarks,
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
       let fileUrl = null;
 
-      if (uploadedFile) {
+      // Now upload the file to organized folder structure if provided
+      if (uploadedFile && newAssignment) {
         const fileExt = uploadedFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${courseId}/${newAssignment.id}/assignment.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('assignment-files')
@@ -111,24 +132,15 @@ export default function TeacherAssignmentCreate({ courseId, onSuccess }: Teacher
           .getPublicUrl(fileName);
 
         fileUrl = publicUrl;
+
+        // Update assignment with file URL
+        const { error: updateError } = await supabase
+          .from('assignments')
+          .update({ file_url: fileUrl })
+          .eq('id', newAssignment.id);
+
+        if (updateError) throw updateError;
       }
-
-      const totalMarks = questions.reduce((sum, q) => sum + q.max_marks, 0);
-
-      const { error } = await supabase
-        .from('assignments')
-        .insert([{
-          course_id: courseId,
-          title,
-          description: description || null,
-          due_date: dueDate || null,
-          created_by: user.id,
-          file_url: fileUrl,
-          questions: questions as any,
-          max_marks: totalMarks,
-        }]);
-
-      if (error) throw error;
 
       toast({
         title: "Success",

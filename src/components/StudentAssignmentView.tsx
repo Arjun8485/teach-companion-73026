@@ -154,11 +154,13 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
 
       if (file) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${assignmentId}_${Date.now()}.${fileExt}`;
+        const fileName = `${courseId}/${assignmentId}/${user.id}/submission.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('submission-files')
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            upsert: true // Allow overwriting if student resubmits
+          });
 
         if (uploadError) throw uploadError;
 
