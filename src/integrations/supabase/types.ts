@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           course_code: string
@@ -78,13 +99,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_role: {
+        Args: { _course_code: string; _student_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _course_code: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _student_id: string
+        }
+        Returns: boolean
+      }
       is_ta: {
         Args: { _course_code: string; _student_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "ta"
+      app_role: "ta" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -212,7 +245,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["ta"],
+      app_role: ["ta", "teacher", "student"],
     },
   },
 } as const

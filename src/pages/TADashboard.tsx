@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, BookOpen, Users, ArrowLeft } from "lucide-react";
+import { Shield, BookOpen, Users, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
-interface StudentInfo {
-  id: string;
-  name: string;
+interface ProfileInfo {
   email: string;
-  student_id: string;
+  full_name: string | null;
 }
 
 interface TARole {
@@ -19,53 +18,45 @@ interface TARole {
 }
 
 export default function TADashboard() {
-  const [searchParams] = useSearchParams();
-  const studentId = searchParams.get("student_id");
-  
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [taCourses, setTACourses] = useState<TARole[]>([]);
-  const [isTA, setIsTA] = useState(false);
 
   useEffect(() => {
-    if (studentId) {
-      checkTAStatus();
-    } else {
-      setLoading(false);
+    if (user) {
+      loadTAData();
     }
-  }, [studentId]);
+  }, [user]);
 
-  const checkTAStatus = async () => {
+  const loadTAData = async () => {
     try {
       setLoading(true);
 
-      // Fetch student info
-      const { data: studentData, error: studentError } = await supabase
-        .from("students")
+      // Fetch profile info
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
         .select("*")
-        .eq("id", studentId)
+        .eq("id", user?.id)
         .single();
 
-      if (studentError) throw studentError;
-      setStudent(studentData);
+      if (profileError) throw profileError;
+      setProfile(profileData);
 
-      // Check if student is a TA in any course
+      // Check if user is a TA in any course
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("course_code")
-        .eq("student_id", studentId);
+        .eq("student_id", user?.id);
 
       if (rolesError) throw rolesError;
 
-      if (rolesData && rolesData.length > 0) {
-        setIsTA(true);
+      if (rolesData) {
         setTACourses(rolesData);
-      } else {
-        setIsTA(false);
       }
     } catch (error) {
-      console.error("Error checking TA status:", error);
-      toast.error("Failed to verify TA status");
+      console.error("Error loading TA data:", error);
+      toast.error("Failed to load TA data");
     } finally {
       setLoading(false);
     }
@@ -76,67 +67,8 @@ export default function TADashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verifying access...</p>
+          <p className="text-muted-foreground">Loading TA dashboard...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!studentId) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-destructive" />
-              Access Required
-            </CardTitle>
-            <CardDescription>
-              Please provide a valid student ID to access the TA dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link to="/">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isTA) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-destructive" />
-              Access Denied
-            </CardTitle>
-            <CardDescription>
-              You are not assigned as a Teaching Assistant
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {student && (
-              <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm font-medium text-foreground">{student.name}</p>
-                <p className="text-xs text-muted-foreground">{student.email}</p>
-                <p className="text-xs font-mono text-muted-foreground mt-1">ID: {student.student_id}</p>
-              </div>
-            )}
-            <Link to="/">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -153,16 +85,22 @@ export default function TADashboard() {
             </h1>
             <p className="text-muted-foreground mt-1">Manage your teaching assistant responsibilities</p>
           </div>
-          <Link to="/">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
+          <div className="flex gap-2">
+            <Link to="/">
+              <Button variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
             </Button>
-          </Link>
+          </div>
         </div>
 
-        {/* Student Info */}
-        {student && (
+        {/* Profile Info */}
+        {profile && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-lg">Your Profile</CardTitle>
@@ -170,9 +108,8 @@ export default function TADashboard() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-foreground">{student.name}</p>
-                  <p className="text-sm text-muted-foreground">{student.email}</p>
-                  <p className="text-sm font-mono text-muted-foreground">Student ID: {student.student_id}</p>
+                  <p className="font-medium text-foreground">{profile.full_name || 'TA User'}</p>
+                  <p className="text-sm text-muted-foreground">{profile.email}</p>
                 </div>
                 <Badge className="bg-primary/10 text-primary border-primary/20">
                   <Shield className="h-3 w-3 mr-1" />
