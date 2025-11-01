@@ -17,265 +17,261 @@ export default function CourseDetailView({ courseName, courseCode }: CourseDetai
   const [activeTab, setActiveTab] = useState("analysis");
 
   return (
-    <div className="space-y-6">
-      <div className="border-b bg-card px-6 py-4">
-        <h1 className="text-2xl font-bold text-foreground">{courseName}</h1>
-        <p className="text-sm text-muted-foreground">{courseCode}</p>
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold text-foreground">{courseName}</h1>
+        <p className="text-sm text-muted-foreground font-mono">{courseCode}</p>
       </div>
 
-      <div className="px-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="analysis" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analysis
-            </TabsTrigger>
-            <TabsTrigger value="assignments" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Assignments
-            </TabsTrigger>
-            <TabsTrigger value="roles" className="gap-2">
-              <Users className="h-4 w-4" />
-              Roles
-            </TabsTrigger>
-            <TabsTrigger value="ta-overview" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              TA Overview
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Exercises
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 gap-1">
+          <TabsTrigger value="analysis" className="gap-1.5 text-xs">
+            <BarChart3 className="h-3.5 w-3.5" />
+            Analysis
+          </TabsTrigger>
+          <TabsTrigger value="assignments" className="gap-1.5 text-xs">
+            <FileText className="h-3.5 w-3.5" />
+            Assignments
+          </TabsTrigger>
+          <TabsTrigger value="roles" className="gap-1.5 text-xs">
+            <Users className="h-3.5 w-3.5" />
+            Roles
+          </TabsTrigger>
+          <TabsTrigger value="ta-overview" className="gap-1.5 text-xs">
+            <TrendingUp className="h-3.5 w-3.5" />
+            TA Overview
+          </TabsTrigger>
+          <TabsTrigger value="exercises" className="gap-1.5 text-xs">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Exercises
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="analysis" className="space-y-6 mt-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Total Students"
-                value="142"
-                icon={<Users className="h-4 w-4" />}
-                trend={{ value: 8, positive: true }}
-              />
-              <StatCard
-                title="Avg Attendance"
-                value="87%"
-                icon={<CheckCircle2 className="h-4 w-4" />}
-                trend={{ value: 3, positive: true }}
-              />
-              <StatCard
-                title="Assignments Completed"
-                value="94%"
-                icon={<FileText className="h-4 w-4" />}
-                trend={{ value: 5, positive: true }}
-              />
-              <StatCard
-                title="AI Verification Accuracy"
-                value="96%"
-                icon={<BarChart3 className="h-4 w-4" />}
-                trend={{ value: 2, positive: true }}
-              />
-            </div>
+        <TabsContent value="analysis" className="space-y-6 mt-8">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Total Students"
+              value="142"
+              icon={<Users className="h-4 w-4" />}
+              trend={{ value: 8, positive: true }}
+            />
+            <StatCard
+              title="Avg Attendance"
+              value="87%"
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              trend={{ value: 3, positive: true }}
+            />
+            <StatCard
+              title="Assignments Completed"
+              value="94%"
+              icon={<FileText className="h-4 w-4" />}
+              trend={{ value: 5, positive: true }}
+            />
+            <StatCard
+              title="AI Verification Accuracy"
+              value="96%"
+              icon={<BarChart3 className="h-4 w-4" />}
+              trend={{ value: 2, positive: true }}
+            />
+          </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Engagement Overview</CardTitle>
-                <CardDescription>Real-time insights on class participation and performance</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium text-foreground">High Performers</p>
-                    <p className="text-sm text-muted-foreground">Students scoring above 90%</p>
-                  </div>
-                  <Badge className="bg-success text-success-foreground">45 students</Badge>
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Student Engagement Overview</CardTitle>
+              <CardDescription className="text-sm">Real-time insights on class participation and performance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">High Performers</p>
+                  <p className="text-xs text-muted-foreground">Students scoring above 90%</p>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium text-foreground">Needs Attention</p>
-                    <p className="text-sm text-muted-foreground">Students with 2+ missed sessions</p>
-                  </div>
-                  <Badge className="bg-warning text-warning-foreground">12 students</Badge>
+                <Badge className="bg-success/10 text-success border-success/20">45 students</Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Needs Attention</p>
+                  <p className="text-xs text-muted-foreground">Students with 2+ missed sessions</p>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium text-foreground">Average Completion Time</p>
-                    <p className="text-sm text-muted-foreground">Time to complete assignments</p>
-                  </div>
-                  <Badge variant="secondary">2.4 days</Badge>
+                <Badge className="bg-warning/10 text-warning border-warning/20">12 students</Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Average Completion Time</p>
+                  <p className="text-xs text-muted-foreground">Time to complete assignments</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <Badge variant="secondary" className="bg-muted">2.4 days</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="assignments" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create New Assignment</CardTitle>
-                <CardDescription>Publish exercises and upload solution files</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+        <TabsContent value="assignments" className="space-y-6 mt-8">
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Create New Assignment</CardTitle>
+              <CardDescription className="text-sm">Publish exercises and upload solution files</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assignment Title</label>
+                <Input placeholder="e.g., Problem Set 3: Dynamics" className="h-10 border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</label>
+                <Textarea placeholder="Describe the assignment objectives and requirements..." rows={4} className="border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</label>
+                <Input type="date" className="h-10 border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Upload Files</label>
+                <Button variant="outline" className="w-full h-10 border-border/40 hover:bg-muted">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload PDF, Images, or Videos
+                </Button>
+              </div>
+              <Button className="w-full h-10">Publish Assignment</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roles" className="space-y-6 mt-8">
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Manage Course Team</CardTitle>
+              <CardDescription className="text-sm">Add TAs, instructors, and manage permissions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Address</label>
+                <Input placeholder="ta@lut.fi" type="email" className="h-10 border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Role</label>
+                <select className="flex h-10 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm hover:bg-muted transition-colors">
+                  <option>Teaching Assistant</option>
+                  <option>Co-Instructor</option>
+                  <option>Grader</option>
+                </select>
+              </div>
+              <Button className="w-full h-10">Add Team Member</Button>
+
+              <div className="mt-8 space-y-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Current Team</h4>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Assignment Title</label>
-                  <Input placeholder="e.g., Problem Set 3: Dynamics" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Description</label>
-                  <Textarea placeholder="Describe the assignment objectives and requirements..." rows={4} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Due Date</label>
-                  <Input type="date" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Upload Files</label>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" className="w-full">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload PDF, Images, or Videos
-                    </Button>
-                  </div>
-                </div>
-                <Button className="w-full">Publish Assignment</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="roles" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Manage Course Team</CardTitle>
-                <CardDescription>Add TAs, instructors, and manage permissions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Email Address</label>
-                  <Input placeholder="ta@lut.fi" type="email" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Role</label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option>Teaching Assistant</option>
-                    <option>Co-Instructor</option>
-                    <option>Grader</option>
-                  </select>
-                </div>
-                <Button className="w-full">Add Team Member</Button>
-
-                <div className="mt-6 space-y-3">
-                  <h4 className="text-sm font-semibold text-foreground">Current Team</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div>
-                        <p className="font-medium text-foreground">Anna Virtanen</p>
-                        <p className="text-sm text-muted-foreground">Teaching Assistant</p>
-                      </div>
-                      <Button variant="ghost" size="sm">Remove</Button>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div>
-                        <p className="font-medium text-foreground">Mikko Järvinen</p>
-                        <p className="text-sm text-muted-foreground">Co-Instructor</p>
-                      </div>
-                      <Button variant="ghost" size="sm">Remove</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="ta-overview" className="space-y-6 mt-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <StatCard
-                title="TA Sessions"
-                value="24"
-                icon={<Users className="h-4 w-4" />}
-              />
-              <StatCard
-                title="Avg Attendance"
-                value="34"
-                icon={<CheckCircle2 className="h-4 w-4" />}
-              />
-              <StatCard
-                title="Completion Rate"
-                value="91%"
-                icon={<TrendingUp className="h-4 w-4" />}
-              />
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>TA Session Analytics</CardTitle>
-                <CardDescription>Detailed data for TA-led sessions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-3.5">
                     <div>
-                      <p className="font-medium text-foreground">Session 1: Introduction</p>
-                      <p className="text-sm text-muted-foreground">Monday 10:00-12:00 • Group A</p>
+                      <p className="text-sm font-medium text-foreground">Anna Virtanen</p>
+                      <p className="text-xs text-muted-foreground">Teaching Assistant</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">38 students</p>
-                      <p className="text-sm text-success">95% attended</p>
-                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs">Remove</Button>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-3.5">
                     <div>
-                      <p className="font-medium text-foreground">Session 2: Problem Solving</p>
-                      <p className="text-sm text-muted-foreground">Tuesday 14:00-16:00 • Group B</p>
+                      <p className="text-sm font-medium text-foreground">Mikko Järvinen</p>
+                      <p className="text-xs text-muted-foreground">Co-Instructor</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">32 students</p>
-                      <p className="text-sm text-success">89% attended</p>
-                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs">Remove</Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="exercises" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Exercise Class Management</CardTitle>
-                <CardDescription>QR code check-ins and AI homework verification</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between rounded-lg border p-6">
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-foreground">Generate Check-in QR Code</h4>
-                    <p className="text-sm text-muted-foreground">Students scan to mark attendance</p>
+        <TabsContent value="ta-overview" className="space-y-6 mt-8">
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard
+              title="TA Sessions"
+              value="24"
+              icon={<Users className="h-4 w-4" />}
+            />
+            <StatCard
+              title="Avg Attendance"
+              value="34"
+              icon={<CheckCircle2 className="h-4 w-4" />}
+            />
+            <StatCard
+              title="Completion Rate"
+              value="91%"
+              icon={<TrendingUp className="h-4 w-4" />}
+            />
+          </div>
+
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">TA Session Analytics</CardTitle>
+              <CardDescription className="text-sm">Detailed data for TA-led sessions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Session 1: Introduction</p>
+                    <p className="text-xs text-muted-foreground">Monday 10:00-12:00 • Group A</p>
                   </div>
-                  <Button className="gap-2">
-                    <QrCode className="h-4 w-4" />
-                    Generate QR
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-foreground">AI Homework Verification</h4>
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-foreground">Problem Set 2 - Group C</span>
-                      <Badge className="bg-accent text-accent-foreground">AI Ready</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">42 submissions pending verification</p>
-                    <Button variant="outline" className="w-full">Start AI Verification</Button>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-foreground">38 students</p>
+                    <p className="text-xs text-success">95% attended</p>
                   </div>
                 </div>
-
-                <div className="rounded-lg bg-accent/10 border border-accent/20 p-4">
-                  <p className="text-sm font-medium text-accent-foreground">💡 AI Tip</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    AI verification has 96% accuracy for mathematical problems. Review flagged submissions manually.
-                  </p>
+                <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Session 2: Problem Solving</p>
+                    <p className="text-xs text-muted-foreground">Tuesday 14:00-16:00 • Group B</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-foreground">32 students</p>
+                    <p className="text-xs text-success">89% attended</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="exercises" className="space-y-6 mt-8">
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Exercise Class Management</CardTitle>
+              <CardDescription className="text-sm">QR code check-ins and AI homework verification</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-5">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium text-foreground">Generate Check-in QR Code</h4>
+                  <p className="text-xs text-muted-foreground">Students scan to mark attendance</p>
+                </div>
+                <Button className="gap-2 h-9">
+                  <QrCode className="h-4 w-4" />
+                  Generate QR
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Homework Verification</h4>
+                <div className="rounded-md border border-border/40 bg-card/50 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Problem Set 2 - Group C</span>
+                    <Badge className="bg-primary/10 text-primary border-primary/20">AI Ready</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">42 submissions pending verification</p>
+                  <Button variant="outline" className="w-full h-9 border-border/40">Start AI Verification</Button>
+                </div>
+              </div>
+
+              <div className="rounded-md bg-primary/5 border border-primary/10 p-4">
+                <p className="text-sm font-medium text-foreground mb-1">💡 AI Tip</p>
+                <p className="text-xs text-muted-foreground">
+                  AI verification has 96% accuracy for mathematical problems. Review flagged submissions manually.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

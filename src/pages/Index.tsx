@@ -55,59 +55,60 @@ const Index = () => {
   return (
     <DashboardLayout selectedCourse={selectedCourse || undefined} onCourseSelect={handleCourseSelect}>
       {!selectedCourse ? (
-        <div className="p-6 space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's what's happening with your courses.</p>
+        <div className="p-8 max-w-7xl mx-auto space-y-10">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening with your courses.</p>
           </div>
 
           {/* Timeline Section */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">Timeline</h2>
-              <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-foreground">Timeline</h2>
+              <div className="flex items-center gap-2">
                 <Button 
-                  variant={filterOverdue ? "default" : "outline"} 
+                  variant={filterOverdue ? "default" : "ghost"} 
                   size="sm"
                   onClick={() => setFilterOverdue(!filterOverdue)}
+                  className="h-8 text-xs"
                 >
                   Overdue
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="ghost" size="sm" className="h-8 text-xs">
                   Sort by dates
                 </Button>
               </div>
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by activity type or name"
-                className="pl-10 h-12"
+                className="pl-10 h-10 border-border/40"
               />
             </div>
 
-            <div className="flex flex-col items-center justify-center py-12 border rounded-lg bg-card">
-              <FileCheck className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">No activities require action</p>
+            <div className="flex flex-col items-center justify-center py-16 border border-border/40 rounded-lg bg-card/30">
+              <FileCheck className="h-12 w-12 text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">No activities require action</p>
             </div>
           </section>
 
           {/* Recently Accessed Courses */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">Recently accessed courses</h2>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon">
+              <h2 className="text-lg font-semibold text-foreground">Recently accessed courses</h2>
+              <div className="flex gap-1.5">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {recentCourses.map((course) => (
                 <CourseCard
                   key={course.id}
@@ -122,18 +123,21 @@ const Index = () => {
           </section>
 
           {/* Quick AI Assistant Prompt */}
-          <section className="mt-8">
-            <div className="rounded-lg border border-accent/30 bg-gradient-to-br from-accent/5 to-primary/5 p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-3">🤖 AI Assistant</h3>
+          <section>
+            <div className="rounded-lg border border-border/40 bg-muted/30 p-6">
+              <h3 className="text-base font-medium text-foreground mb-2 flex items-center gap-2">
+                <span>🤖</span>
+                <span>AI Assistant</span>
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Try natural language commands like "Show students who missed 2+ sessions" or "Create assignment for Math 1 due next Friday"
               </p>
               <div className="flex gap-2">
                 <Input 
                   placeholder="Ask me anything about your courses..."
-                  className="flex-1"
+                  className="flex-1 h-10 border-border/40"
                 />
-                <Button className="gap-2">
+                <Button className="h-10 px-4">
                   Ask AI
                 </Button>
               </div>
@@ -142,8 +146,8 @@ const Index = () => {
         </div>
       ) : (
         <div>
-          <div className="border-b bg-card px-6 py-3">
-            <Button variant="ghost" onClick={handleBackToDashboard} className="gap-2">
+          <div className="border-b border-border/40 bg-background px-8 py-4">
+            <Button variant="ghost" onClick={handleBackToDashboard} className="gap-2 h-9 text-sm -ml-2">
               <ChevronLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>

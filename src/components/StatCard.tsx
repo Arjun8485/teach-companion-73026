@@ -15,18 +15,18 @@ interface StatCardProps {
 
 export default function StatCard({ title, value, icon, trend, className }: StatCardProps) {
   return (
-    <Card className={cn("transition-all hover:shadow-md", className)}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        {icon && <div className="text-muted-foreground">{icon}</div>}
+    <Card className={cn("border-border/40 transition-all hover:border-border hover:shadow-sm", className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</CardTitle>
+        {icon && <div className="text-muted-foreground opacity-60">{icon}</div>}
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline justify-between">
-          <div className="text-2xl font-bold text-foreground">{value}</div>
+          <div className="text-3xl font-semibold text-foreground">{value}</div>
           {trend && (
             <div className={cn(
-              "text-xs font-medium",
-              trend.positive ? "text-success" : "text-destructive"
+              "text-xs font-medium px-2 py-0.5 rounded-md",
+              trend.positive ? "text-success bg-success/10" : "text-destructive bg-destructive/10"
             )}>
               {trend.positive ? "↑" : "↓"} {Math.abs(trend.value)}%
             </div>

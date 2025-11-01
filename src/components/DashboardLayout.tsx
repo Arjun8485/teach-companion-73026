@@ -30,92 +30,74 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-8 w-8 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-foreground">LUT University</span>
-                <span className="text-xs text-muted-foreground">Teacher Dashboard</span>
-              </div>
-            </div>
+      {/* Minimal Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+        <div className="flex h-14 items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <GraduationCap className="h-6 w-6 text-primary" />
+            <span className="text-sm font-semibold text-foreground">LUT Teacher</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              Home
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 hover:bg-muted">
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary"></span>
             </Button>
-            <Button variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
-              Dashboard
+            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted">
+              <MessageSquare className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              More
-            </Button>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-accent"></span>
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MessageSquare className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted">
+              <User className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
       <div className="flex w-full">
-        {/* Sidebar */}
+        {/* Clean Sidebar */}
         <aside
           className={cn(
-            "sticky top-16 h-[calc(100vh-4rem)] border-r bg-card transition-all duration-300",
-            sidebarCollapsed ? "w-16" : "w-72"
+            "sticky top-14 h-[calc(100vh-3.5rem)] border-r bg-background transition-all duration-200",
+            sidebarCollapsed ? "w-16" : "w-64"
           )}
         >
           <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between border-b p-4">
+            <div className="flex items-center justify-between p-4 pb-3">
               {!sidebarCollapsed && (
-                <h2 className="text-sm font-semibold text-foreground">My Courses</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</h2>
               )}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="h-8 w-8"
+                className="h-7 w-7 hover:bg-muted"
               >
-                <ChevronRight className={cn("h-4 w-4 transition-transform", !sidebarCollapsed && "rotate-180")} />
+                <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", !sidebarCollapsed && "rotate-180")} />
               </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto px-3 space-y-1">
               {courses.map((course) => (
                 <button
                   key={course.id}
                   onClick={() => onCourseSelect?.(course.id)}
                   className={cn(
-                    "w-full rounded-lg p-3 text-left transition-all hover:bg-secondary",
-                    selectedCourse === course.id && "bg-primary/10 border border-primary/20"
+                    "w-full rounded-md px-2.5 py-2 text-left transition-all",
+                    selectedCourse === course.id 
+                      ? "bg-primary/10 text-primary" 
+                      : "hover:bg-muted text-foreground"
                   )}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-2.5">
                     <div className={cn(
-                      "mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
-                      selectedCourse === course.id ? "bg-primary text-primary-foreground" : "bg-muted"
+                      "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md",
+                      selectedCourse === course.id ? "bg-primary/20" : "bg-muted"
                     )}>
-                      <GraduationCap className="h-4 w-4" />
+                      <GraduationCap className="h-3.5 w-3.5" />
                     </div>
                     {!sidebarCollapsed && (
                       <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm font-medium truncate",
-                          selectedCourse === course.id ? "text-primary" : "text-foreground"
-                        )}>
+                        <p className="text-sm font-medium truncate">
                           {course.name}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{course.code}</p>
@@ -129,7 +111,7 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
+        <main className="flex-1 bg-background">
           {children}
         </main>
       </div>
