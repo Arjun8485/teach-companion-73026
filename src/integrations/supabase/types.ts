@@ -111,6 +111,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_teacher_for_course: {
+        Args: { _course_id: string; _user_id: string }
+        Returns: boolean
+      }
       users_share_course: {
         Args: { _user_id1: string; _user_id2: string }
         Returns: boolean
