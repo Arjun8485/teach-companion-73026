@@ -1,8 +1,11 @@
 import { ReactNode, useState } from "react";
-import { Bell, MessageSquare, User, ChevronRight, GraduationCap } from "lucide-react";
+import { Bell, MessageSquare, User, ChevronRight, GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Course {
   id: string;
@@ -27,6 +30,17 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, selectedCourse, onCourseSelect }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to log out");
+    } else {
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,6 +62,9 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted">
               <User className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="h-9 w-9 hover:bg-muted" title="Log out">
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>

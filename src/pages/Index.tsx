@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import CourseCard from "@/components/CourseCard";
 import CourseDetailView from "@/components/CourseDetailView";
@@ -41,6 +43,32 @@ const recentCourses = [
 const Index = () => {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [filterOverdue, setFilterOverdue] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourse(courseId);

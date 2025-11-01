@@ -48,7 +48,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -58,7 +58,32 @@ export default function Auth() {
 
       if (error) throw error;
 
-      toast.success("Account created! You can now log in.");
+      // Automatically assign role based on email domain
+      if (data.user) {
+        const emailDomain = email.split('@')[1];
+        let role: 'teacher' | 'ta' | 'student' = 'student';
+        
+        if (emailDomain === 'teacher.uni') {
+          role = 'teacher';
+        } else if (emailDomain === 'ta.uni') {
+          role = 'ta';
+        }
+
+        // Assign role for BK80A4000 course
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            student_id: data.user.id,
+            role: role,
+            course_code: 'BK80A4000'
+          } as any);
+
+        if (roleError) {
+          console.error('Failed to assign role:', roleError);
+        }
+      }
+
+      toast.success("Account created successfully!");
       navigate("/");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
