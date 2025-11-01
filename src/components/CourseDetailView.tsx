@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
 import StudentTAList from "./StudentTAList";
 import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface CourseDetailViewProps {
   courseId: string;
@@ -21,9 +23,16 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
   const [activeTab, setActiveTab] = useState(isTA ? "analysis" : "assignments");
   const [course, setCourse] = useState<{ name: string; department: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentTitle, setAssignmentTitle] = useState("");
+  const [assignmentDescription, setAssignmentDescription] = useState("");
+  const [assignmentDueDate, setAssignmentDueDate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadCourse();
+    loadAssignments();
   }, [courseId]);
 
   const loadCourse = async () => {
@@ -40,6 +49,69 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
       console.error('Error loading course:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAssignments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*, profiles:created_by(full_name)')
+        .eq('course_id', courseId)
+        .order('due_date', { ascending: true });
+
+      if (error) throw error;
+      setAssignments(data || []);
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+    }
+  };
+
+  const handleCreateAssignment = async () => {
+    if (!assignmentTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an assignment title",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from('assignments')
+        .insert({
+          course_id: courseId,
+          title: assignmentTitle,
+          description: assignmentDescription,
+          due_date: assignmentDueDate || null,
+          created_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Assignment created successfully",
+      });
+
+      setAssignmentTitle("");
+      setAssignmentDescription("");
+      setAssignmentDueDate("");
+      loadAssignments();
+    } catch (error: any) {
+      console.error('Error creating assignment:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create assignment",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -169,32 +241,94 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
         )}
 
         <TabsContent value="assignments" className="space-y-6 mt-8">
+          {isTeacher && (
+            <Card className="border-border/40">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium">Create New Assignment</CardTitle>
+                <CardDescription className="text-sm">Publish exercises for students</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assignment Title</label>
+                  <Input 
+                    placeholder="e.g., Problem Set 3: Dynamics" 
+                    className="h-10 border-border/40"
+                    value={assignmentTitle}
+                    onChange={(e) => setAssignmentTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</label>
+                  <Textarea 
+                    placeholder="Describe the assignment objectives and requirements..." 
+                    rows={4} 
+                    className="border-border/40"
+                    value={assignmentDescription}
+                    onChange={(e) => setAssignmentDescription(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</label>
+                  <Input 
+                    type="date" 
+                    className="h-10 border-border/40"
+                    value={assignmentDueDate}
+                    onChange={(e) => setAssignmentDueDate(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  className="w-full h-10" 
+                  onClick={handleCreateAssignment}
+                  disabled={submitting}
+                >
+                  {submitting ? "Publishing..." : "Publish Assignment"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-border/40">
             <CardHeader>
-              <CardTitle className="text-lg font-medium">Create New Assignment</CardTitle>
-              <CardDescription className="text-sm">Publish exercises and upload solution files</CardDescription>
+              <CardTitle className="text-lg font-medium">Assignments</CardTitle>
+              <CardDescription className="text-sm">
+                {assignments.length === 0 
+                  ? "No assignments yet" 
+                  : `${assignments.length} assignment${assignments.length !== 1 ? 's' : ''}`}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assignment Title</label>
-                <Input placeholder="e.g., Problem Set 3: Dynamics" className="h-10 border-border/40" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</label>
-                <Textarea placeholder="Describe the assignment objectives and requirements..." rows={4} className="border-border/40" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</label>
-                <Input type="date" className="h-10 border-border/40" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Upload Files</label>
-                <Button variant="outline" className="w-full h-10 border-border/40 hover:bg-muted">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload PDF, Images, or Videos
-                </Button>
-              </div>
-              <Button className="w-full h-10">Publish Assignment</Button>
+            <CardContent>
+              {assignments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No assignments have been created yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {assignments.map((assignment) => (
+                    <div 
+                      key={assignment.id}
+                      className="flex items-start justify-between rounded-md border border-border/40 bg-card/50 p-4"
+                    >
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-foreground mb-1">{assignment.title}</h4>
+                        {assignment.description && (
+                          <p className="text-xs text-muted-foreground mb-2">{assignment.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {assignment.due_date && (
+                            <span>Due: {format(new Date(assignment.due_date), 'MMM d, yyyy')}</span>
+                          )}
+                          {assignment.profiles?.full_name && (
+                            <>
+                              <span>•</span>
+                              <span>By: {assignment.profiles.full_name}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
