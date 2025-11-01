@@ -14,106 +14,16 @@ export type Database = {
   }
   public: {
     Tables: {
-      courses: {
-        Row: {
-          created_at: string
-          dates: string | null
-          department: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          dates?: string | null
-          department: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          dates?: string | null
-          department?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          email: string
-          full_name: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          full_name?: string | null
-          id: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          full_name?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          assigned_at: string
-          course_id: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          student_id: string
-        }
-        Insert: {
-          assigned_at?: string
-          course_id?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          student_id: string
-        }
-        Update: {
-          assigned_at?: string
-          course_id?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          student_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_roles_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _course_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-          _student_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "ta" | "teacher" | "student"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -240,8 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["ta", "teacher", "student"],
-    },
+    Enums: {},
   },
 } as const
