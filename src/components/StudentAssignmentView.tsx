@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { ChevronDown, Upload, FileText, Download } from "lucide-react";
+import { ChevronDown, FileText } from "lucide-react";
 
 interface Assignment {
   id: string;
@@ -181,8 +181,24 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
     }
   };
 
-  const dueAssignments = assignments.filter(a => !a.due_date || new Date(a.due_date) >= new Date());
-  const pastAssignments = assignments.filter(a => a.due_date && new Date(a.due_date) < new Date());
+  // Categorize assignments
+  const now = new Date();
+  const dueAssignments = assignments.filter(a => {
+    const submission = submissions[a.id];
+    const isDue = !a.due_date || new Date(a.due_date) >= now;
+    return isDue && !submission;
+  });
+  
+  const submittedAssignments = assignments.filter(a => {
+    const submission = submissions[a.id];
+    const isDue = !a.due_date || new Date(a.due_date) >= now;
+    return isDue && submission;
+  });
+  
+  const pastAssignments = assignments.filter(a => {
+    const isPast = a.due_date && new Date(a.due_date) < now;
+    return isPast;
+  });
 
   const renderAssignment = (assignment: Assignment) => {
     const submission = submissions[assignment.id];
@@ -247,8 +263,8 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Download Assignment PDF
+                  <FileText className="h-3.5 w-3.5" />
+                  View Assignment PDF
                 </a>
               )}
 
@@ -370,6 +386,20 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
           )}
         </CollapsibleContent>
       </Collapsible>
+
+      {submittedAssignments.length > 0 && (
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="font-medium">Submitted Assignments ({submittedAssignments.length})</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 mt-3">
+            {submittedAssignments.map(renderAssignment)}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {pastAssignments.length > 0 && (
         <Collapsible>
