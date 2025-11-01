@@ -10,6 +10,7 @@ interface Course {
   id: string;
   name: string;
   department: string;
+  isTA?: boolean;
 }
 
 interface DashboardLayoutProps {
@@ -21,21 +22,61 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, selectedCourse, onCourseSelect }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
+    loadUserData();
     loadCourses();
   }, []);
 
+  const loadUserData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      setUserName(profile?.full_name || profile?.email || 'User');
+    } catch (error) {
+      console.error('Error loading user:', error);
+    }
+  };
+
   const loadCourses = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get all courses
+      const { data: coursesData, error: coursesError } = await supabase
         .from('courses')
         .select('id, name, department')
         .order('name');
 
-      if (error) throw error;
-      setCourses(data || []);
+      if (coursesError) throw coursesError;
+
+      // Get user's TA roles
+      const { data: taRoles, error: taError } = await supabase
+        .from('user_roles')
+        .select('course_id')
+        .eq('student_id', user.id)
+        .eq('role', 'ta');
+
+      if (taError) throw taError;
+
+      const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
+      
+      const coursesWithRoles = (coursesData || []).map(course => ({
+        ...course,
+        isTA: taCourseIds.has(course.id)
+      }));
+
+      setCourses(coursesWithRoles);
     } catch (error) {
       console.error('Error loading courses:', error);
     }
@@ -58,7 +99,10 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
         <div className="flex h-14 items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="text-sm font-semibold text-foreground">LUT Teacher</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-foreground">{userName}</span>
+              <span className="text-xs text-muted-foreground">Student Dashboard</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -123,9 +167,14 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
                     </div>
                     {!sidebarCollapsed && (
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {course.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">
+                            {course.name}
+                          </p>
+                          {course.isTA && (
+                            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">TA</span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">{course.department}</p>
                       </div>
                     )}

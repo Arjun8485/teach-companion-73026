@@ -12,11 +12,12 @@ import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, A
 
 interface CourseDetailViewProps {
   courseId: string;
+  isTA: boolean;
   onBack: () => void;
 }
 
-export default function CourseDetailView({ courseId, onBack }: CourseDetailViewProps) {
-  const [activeTab, setActiveTab] = useState("analysis");
+export default function CourseDetailView({ courseId, isTA, onBack }: CourseDetailViewProps) {
+  const [activeTab, setActiveTab] = useState(isTA ? "analysis" : "assignments");
   const [course, setCourse] = useState<{ name: string; department: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,29 +78,36 @@ export default function CourseDetailView({ courseId, onBack }: CourseDetailViewP
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 gap-1">
-          <TabsTrigger value="analysis" className="gap-1.5 text-xs">
-            <BarChart3 className="h-3.5 w-3.5" />
-            Analysis
-          </TabsTrigger>
+          {isTA && (
+            <TabsTrigger value="analysis" className="gap-1.5 text-xs">
+              <BarChart3 className="h-3.5 w-3.5" />
+              Analysis
+            </TabsTrigger>
+          )}
           <TabsTrigger value="assignments" className="gap-1.5 text-xs">
             <FileText className="h-3.5 w-3.5" />
             Assignments
           </TabsTrigger>
-          <TabsTrigger value="roles" className="gap-1.5 text-xs">
-            <Users className="h-3.5 w-3.5" />
-            Roles
-          </TabsTrigger>
-          <TabsTrigger value="ta-overview" className="gap-1.5 text-xs">
-            <TrendingUp className="h-3.5 w-3.5" />
-            TA Overview
-          </TabsTrigger>
+          {isTA && (
+            <TabsTrigger value="roles" className="gap-1.5 text-xs">
+              <Users className="h-3.5 w-3.5" />
+              Roles
+            </TabsTrigger>
+          )}
+          {isTA && (
+            <TabsTrigger value="ta-overview" className="gap-1.5 text-xs">
+              <TrendingUp className="h-3.5 w-3.5" />
+              TA Overview
+            </TabsTrigger>
+          )}
           <TabsTrigger value="exercises" className="gap-1.5 text-xs">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Exercises
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analysis" className="space-y-6 mt-8">
+        {isTA && (
+          <TabsContent value="analysis" className="space-y-6 mt-8">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Students"
@@ -157,6 +165,7 @@ export default function CourseDetailView({ courseId, onBack }: CourseDetailViewP
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         <TabsContent value="assignments" className="space-y-6 mt-8">
           <Card className="border-border/40">
@@ -189,7 +198,8 @@ export default function CourseDetailView({ courseId, onBack }: CourseDetailViewP
           </Card>
         </TabsContent>
 
-        <TabsContent value="roles" className="space-y-6 mt-8">
+        {isTA && (
+          <TabsContent value="roles" className="space-y-6 mt-8">
           <Card className="border-border/40">
             <CardHeader>
               <CardTitle className="text-lg font-medium">Teaching Assistant Assignment</CardTitle>
@@ -200,8 +210,10 @@ export default function CourseDetailView({ courseId, onBack }: CourseDetailViewP
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
-        <TabsContent value="ta-overview" className="space-y-6 mt-8">
+        {isTA && (
+          <TabsContent value="ta-overview" className="space-y-6 mt-8">
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard
               title="TA Sessions"
@@ -251,6 +263,7 @@ export default function CourseDetailView({ courseId, onBack }: CourseDetailViewP
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         <TabsContent value="exercises" className="space-y-6 mt-8">
           <Card className="border-border/40">

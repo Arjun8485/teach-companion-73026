@@ -5,9 +5,14 @@ import DashboardLayout from "@/components/DashboardLayout";
 import CourseDetailView from "@/components/CourseDetailView";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface UserCourseRole {
+  [courseId: string]: boolean; // true if TA, false if student
+}
+
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<UserCourseRole>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +27,29 @@ export default function StudentDashboard() {
       return;
     }
 
+    await loadUserRoles(session.user.id);
     setLoading(false);
+  };
+
+  const loadUserRoles = async (userId: string) => {
+    try {
+      const { data: taRoles, error } = await supabase
+        .from('user_roles')
+        .select('course_id')
+        .eq('student_id', userId)
+        .eq('role', 'ta');
+
+      if (error) throw error;
+
+      const rolesMap: UserCourseRole = {};
+      taRoles?.forEach(role => {
+        rolesMap[role.course_id] = true;
+      });
+
+      setUserRoles(rolesMap);
+    } catch (error) {
+      console.error('Error loading user roles:', error);
+    }
   };
 
   if (loading) {
@@ -38,6 +65,7 @@ export default function StudentDashboard() {
       {selectedCourse ? (
         <CourseDetailView 
           courseId={selectedCourse}
+          isTA={userRoles[selectedCourse] || false}
           onBack={() => setSelectedCourse(null)}
         />
       ) : (

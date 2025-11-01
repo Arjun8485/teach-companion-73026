@@ -182,6 +182,7 @@ const Index = () => {
           </div>
           <CourseDetailView
             courseId={selectedCourse}
+            isTA={true}
             onBack={handleBackToDashboard}
           />
         </div>
