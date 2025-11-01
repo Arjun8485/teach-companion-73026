@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,21 +8,71 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
 import StudentTAList from "./StudentTAList";
-import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp } from "lucide-react";
+import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, ArrowLeft } from "lucide-react";
 
 interface CourseDetailViewProps {
-  courseName: string;
-  courseCode: string;
+  courseId: string;
+  onBack: () => void;
 }
 
-export default function CourseDetailView({ courseName, courseCode }: CourseDetailViewProps) {
+export default function CourseDetailView({ courseId, onBack }: CourseDetailViewProps) {
   const [activeTab, setActiveTab] = useState("analysis");
+  const [course, setCourse] = useState<{ name: string; department: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCourse();
+  }, [courseId]);
+
+  const loadCourse = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('name, department')
+        .eq('id', courseId)
+        .single();
+
+      if (error) throw error;
+      setCourse(data);
+    } catch (error) {
+      console.error('Error loading course:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-muted-foreground">Loading course...</div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="p-8">
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <p className="text-muted-foreground">Course not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={onBack} size="sm">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+      </div>
+      
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground">{courseName}</h1>
-        <p className="text-sm text-muted-foreground font-mono">{courseCode}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{course.name}</h1>
+        <p className="text-sm text-muted-foreground">{course.department}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -145,7 +196,7 @@ export default function CourseDetailView({ courseName, courseCode }: CourseDetai
               <CardDescription className="text-sm">Select students to assign as TAs for this course</CardDescription>
             </CardHeader>
             <CardContent>
-              <StudentTAList courseCode={courseCode} />
+              <StudentTAList courseCode={courseId} />
             </CardContent>
           </Card>
         </TabsContent>

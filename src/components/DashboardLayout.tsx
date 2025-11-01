@@ -1,7 +1,6 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Bell, MessageSquare, User, ChevronRight, GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -10,17 +9,8 @@ import { toast } from "sonner";
 interface Course {
   id: string;
   name: string;
-  code: string;
   department: string;
 }
-
-const courses: Course[] = [
-  { id: "1", name: "Engineering Mechanics I", code: "BK80A4000", department: "Mechanical Engineering" },
-  { id: "2", name: "Finnish 2", code: "K200CE70-3134", department: "Language studies" },
-  { id: "3", name: "Mathematics 1", code: "MAT101", department: "Mathematics" },
-  { id: "4", name: "Engineering Physics", code: "PHY201", department: "Physics" },
-  { id: "5", name: "Sustainability in Practice", code: "SUS301", department: "Other courses" },
-];
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -30,7 +20,26 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, selectedCourse, onCourseSelect }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, name, department')
+        .order('name');
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error loading courses:', error);
+    }
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -117,7 +126,7 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
                         <p className="text-sm font-medium truncate">
                           {course.name}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">{course.code}</p>
+                        <p className="text-xs text-muted-foreground truncate">{course.department}</p>
                       </div>
                     )}
                   </div>

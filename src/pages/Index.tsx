@@ -181,8 +181,8 @@ const Index = () => {
             </Button>
           </div>
           <CourseDetailView
-            courseName={selectedCourseData?.title || ""}
-            courseCode={selectedCourseData?.code || ""}
+            courseId={selectedCourse}
+            onBack={handleBackToDashboard}
           />
         </div>
       )}
