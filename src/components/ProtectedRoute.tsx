@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRoles, courseCode = 'CS101' }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -62,10 +63,13 @@ const ProtectedRoute = ({ children, allowedRoles, courseCode = 'CS101' }: Protec
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+          <p className="text-muted-foreground mb-6">
             You don't have permission to access this page.
           </p>
+          <Button onClick={signOut} variant="outline">
+            Sign Out
+          </Button>
         </div>
       </div>
     );
