@@ -67,31 +67,30 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
     try {
       setLoading(true);
 
-      // Fetch all students for this course
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('course_code', courseCode);
+      // Fetch all user profiles (all students have access to all courses now)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name');
 
-      if (studentsError) throw studentsError;
+      if (profilesError) throw profilesError;
 
       // Fetch TA roles for this course
       const { data: taRoles, error: taError } = await supabase
         .from('user_roles')
         .select('student_id')
-        .eq('course_code', courseCode)
+        .eq('course_id', courseCode)
         .eq('role', 'ta');
 
       if (taError) throw taError;
 
       const taIds = new Set(taRoles?.map((r) => r.student_id) || []);
 
-      const studentsList: Student[] = (studentsData || []).map((s) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        student_id: s.student_id,
-        isTA: taIds.has(s.student_id),
+      const studentsList: Student[] = (profilesData || []).map((p) => ({
+        id: p.id,
+        name: p.full_name || p.email,
+        email: p.email,
+        student_id: p.id,
+        isTA: taIds.has(p.id),
       }));
 
       setStudents(studentsList);
@@ -123,7 +122,7 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
           .insert({
             student_id: student.student_id,
             role: 'ta',
-            course_code: courseCode
+            course_id: courseCode
           });
 
         if (error) throw error;
@@ -133,7 +132,7 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
           .from('user_roles')
           .delete()
           .eq('student_id', student.student_id)
-          .eq('course_code', courseCode)
+          .eq('course_id', courseCode)
           .eq('role', 'ta');
 
         if (error) throw error;

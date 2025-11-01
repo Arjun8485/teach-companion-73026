@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      courses: {
+        Row: {
+          created_at: string
+          dates: string | null
+          department: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          dates?: string | null
+          department: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          dates?: string | null
+          department?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -35,56 +59,36 @@ export type Database = {
         }
         Relationships: []
       }
-      students: {
-        Row: {
-          course_code: string
-          created_at: string
-          email: string
-          id: string
-          name: string
-          student_id: string
-        }
-        Insert: {
-          course_code: string
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          student_id: string
-        }
-        Update: {
-          course_code?: string
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          student_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           assigned_at: string
-          course_code: string
+          course_id: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           student_id: string
         }
         Insert: {
           assigned_at?: string
-          course_code: string
+          course_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           student_id: string
         }
         Update: {
           assigned_at?: string
-          course_code?: string
+          course_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_roles_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_roles_student_id_fkey"
             columns: ["student_id"]
@@ -99,24 +103,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: { _course_code: string; _student_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
       has_role: {
         Args: {
-          _course_code: string
+          _course_id: string
           _role: Database["public"]["Enums"]["app_role"]
           _student_id: string
         }
-        Returns: boolean
-      }
-      is_ta: {
-        Args: { _course_code: string; _student_id: string }
-        Returns: boolean
-      }
-      user_has_course_access: {
-        Args: { _course_code: string; _student_id: string }
         Returns: boolean
       }
     }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import StudentTAList from "@/components/StudentTAList";
 
@@ -88,7 +89,15 @@ export default function TADashboard() {
         {/* Student List Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Students</h2>
-          <StudentTAList courseCode="BK80A4000" />
+          {/* StudentTAList will be updated once we have course selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>TA Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Select a course to manage TAs</p>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Quick Actions */}

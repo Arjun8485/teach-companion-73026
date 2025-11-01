@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { GraduationCap, UserCheck } from "lucide-react";
 
 interface CourseEnrollment {
-  course_code: string;
-  course_name: string;
+  id: string;
+  name: string;
+  department: string;
+  dates: string;
   is_ta: boolean;
 }
 
@@ -34,30 +36,31 @@ export default function StudentDashboard() {
 
   const loadCourses = async (userId: string) => {
     try {
-      // Get courses where student is enrolled
-      const { data: studentCourses, error: studentError } = await supabase
-        .from('students')
-        .select('course_code, name')
-        .eq('student_id', userId);
+      // Get all courses (students are automatically enrolled in all)
+      const { data: allCourses, error: coursesError } = await supabase
+        .from('courses')
+        .select('*');
 
-      if (studentError) throw studentError;
+      if (coursesError) throw coursesError;
 
-      // Get TA roles
+      // Get TA roles for this user
       const { data: taRoles, error: taError } = await supabase
         .from('user_roles')
-        .select('course_code')
+        .select('course_id')
         .eq('student_id', userId)
         .eq('role', 'ta');
 
       if (taError) throw taError;
 
       // Combine the data
-      const taCourses = new Set(taRoles?.map(r => r.course_code) || []);
+      const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
       
-      const enrollments: CourseEnrollment[] = (studentCourses || []).map(course => ({
-        course_code: course.course_code,
-        course_name: course.name,
-        is_ta: taCourses.has(course.course_code)
+      const enrollments: CourseEnrollment[] = (allCourses || []).map(course => ({
+        id: course.id,
+        name: course.name,
+        department: course.department,
+        dates: course.dates || '',
+        is_ta: taCourseIds.has(course.id)
       }));
 
       setCourses(enrollments);
@@ -93,7 +96,7 @@ export default function StudentDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => (
-              <Card key={course.course_code} className="border-border/40 hover:border-primary/30 transition-all">
+              <Card key={course.id} className="border-border/40 hover:border-primary/30 transition-all">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -101,8 +104,8 @@ export default function StudentDashboard() {
                         <GraduationCap className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <CardTitle className="text-base">{course.course_name}</CardTitle>
-                        <p className="text-xs text-muted-foreground font-mono mt-1">{course.course_code}</p>
+                        <CardTitle className="text-base">{course.name}</CardTitle>
+                        <p className="text-xs text-muted-foreground mt-1">{course.department}</p>
                       </div>
                     </div>
                   </div>
