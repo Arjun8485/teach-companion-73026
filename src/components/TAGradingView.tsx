@@ -144,6 +144,38 @@ export default function TAGradingView({ courseId, isTeacher = false }: TAGrading
     }
   };
 
+  const handleViewPDF = async (filePath: string, fileName: string) => {
+    try {
+      // Extract bucket and path from the full URL
+      const url = new URL(filePath);
+      const pathParts = url.pathname.split('/');
+      const bucketId = pathParts[pathParts.indexOf('public') + 1];
+      const path = pathParts.slice(pathParts.indexOf(bucketId) + 1).join('/');
+
+      // Download the file
+      const { data, error } = await supabase.storage
+        .from(bucketId)
+        .download(path);
+
+      if (error) throw error;
+
+      // Create blob URL and open in new tab
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+
+      // Clean up blob URL after a delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error: any) {
+      console.error('Error viewing PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleFinalizeGrading = async (submissionId: string) => {
     try {
       // First save the current grades
@@ -285,15 +317,13 @@ export default function TAGradingView({ courseId, isTeacher = false }: TAGrading
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {submission.file_url && (
-                    <a 
-                      href={submission.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <button 
+                      onClick={() => handleViewPDF(submission.file_url!, `submission_${submission.profiles?.full_name}.pdf`)}
                       className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                     >
                       <Download className="h-3.5 w-3.5" />
                       View Submission PDF
-                    </a>
+                    </button>
                   )}
 
                   <div className="space-y-2">

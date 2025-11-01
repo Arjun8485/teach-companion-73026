@@ -116,6 +116,38 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
     });
   };
 
+  const handleViewPDF = async (filePath: string, fileName: string) => {
+    try {
+      // Extract bucket and path from the full URL
+      const url = new URL(filePath);
+      const pathParts = url.pathname.split('/');
+      const bucketId = pathParts[pathParts.indexOf('public') + 1];
+      const path = pathParts.slice(pathParts.indexOf(bucketId) + 1).join('/');
+
+      // Download the file
+      const { data, error } = await supabase.storage
+        .from(bucketId)
+        .download(path);
+
+      if (error) throw error;
+
+      // Create blob URL and open in new tab
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+
+      // Clean up blob URL after a delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error: any) {
+      console.error('Error viewing PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = async (assignmentId: string) => {
     setSubmitting(assignmentId);
     try {
@@ -257,15 +289,13 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
               )}
 
               {assignment.file_url && (
-                <a 
-                  href={assignment.file_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button 
+                  onClick={() => handleViewPDF(assignment.file_url!, `${assignment.title}.pdf`)}
                   className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                 >
                   <FileText className="h-3.5 w-3.5" />
                   View Assignment PDF
-                </a>
+                </button>
               )}
 
               {!submission?.grading_finalized && (
@@ -291,7 +321,7 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
                     )}
                     {submission?.file_url && !uploadingFiles[assignment.id] && (
                       <div className="text-xs text-muted-foreground">
-                        Current submission: <a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View PDF</a>
+                        Current submission: <button onClick={() => handleViewPDF(submission.file_url!, `${assignment.title}_submission.pdf`)} className="text-primary hover:underline">View PDF</button>
                       </div>
                     )}
                   </div>
