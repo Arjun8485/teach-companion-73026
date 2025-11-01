@@ -21,6 +21,7 @@ export type Database = {
           created_by: string
           description: string | null
           due_date: string | null
+          file_url: string | null
           id: string
           title: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           created_by: string
           description?: string | null
           due_date?: string | null
+          file_url?: string | null
           id?: string
           title: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           due_date?: string | null
+          file_url?: string | null
           id?: string
           title?: string
         }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
 import StudentTAList from "./StudentTAList";
-import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, ArrowLeft } from "lucide-react";
+import { BarChart3, Users, FileText, CheckCircle2, Upload, QrCode, TrendingUp, ArrowLeft, Trash2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -28,6 +28,8 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,6 +69,21 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Error",
+          description: "Please select a PDF file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setUploadedFile(file);
+    }
+  };
+
   const handleCreateAssignment = async () => {
     if (!assignmentTitle.trim()) {
       toast({
@@ -82,6 +99,26 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      let fileUrl = null;
+
+      // Upload file if present
+      if (uploadedFile) {
+        const fileExt = uploadedFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('assignment-files')
+          .upload(fileName, uploadedFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('assignment-files')
+          .getPublicUrl(fileName);
+
+        fileUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from('assignments')
         .insert({
@@ -90,6 +127,7 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
           description: assignmentDescription,
           due_date: assignmentDueDate || null,
           created_by: user.id,
+          file_url: fileUrl,
         });
 
       if (error) throw error;
@@ -102,6 +140,8 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate("");
+      setUploadedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       loadAssignments();
     } catch (error: any) {
       console.error('Error creating assignment:', error);
@@ -112,6 +152,33 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!confirm("Are you sure you want to delete this assignment?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Assignment deleted successfully",
+      });
+
+      loadAssignments();
+    } catch (error: any) {
+      console.error('Error deleting assignment:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete assignment",
+        variant: "destructive",
+      });
     }
   };
 
@@ -276,6 +343,24 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
                     onChange={(e) => setAssignmentDueDate(e.target.value)}
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Upload PDF (Optional)</label>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileSelect}
+                      className="h-10 border-border/40"
+                    />
+                    {uploadedFile && (
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <FileText className="h-3 w-3" />
+                        {uploadedFile.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <Button 
                   className="w-full h-10" 
                   onClick={handleCreateAssignment}
@@ -313,7 +398,7 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
                         {assignment.description && (
                           <p className="text-xs text-muted-foreground mb-2">{assignment.description}</p>
                         )}
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                           {assignment.due_date && (
                             <span>Due: {format(new Date(assignment.due_date), 'MMM d, yyyy')}</span>
                           )}
@@ -324,7 +409,28 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
                             </>
                           )}
                         </div>
+                        {assignment.file_url && (
+                          <a 
+                            href={assignment.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download PDF
+                          </a>
+                        )}
                       </div>
+                      {isTeacher && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAssignment(assignment.id)}
+                          className="ml-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
