@@ -180,7 +180,7 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
           {isTeacher ? (
             <>
               <TeacherAssignmentCreate courseId={courseId} onSuccess={handleAssignmentCreated} />
-              <TAGradingView key={assignmentKey} courseId={courseId} />
+              <TAGradingView key={assignmentKey} courseId={courseId} isTeacher={true} />
             </>
           ) : isTA ? (
             <TAGradingView key={assignmentKey} courseId={courseId} />

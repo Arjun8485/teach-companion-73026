@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Download, Check } from "lucide-react";
+import { Download, Check, ChevronDown, Edit2, Trash2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Assignment {
   id: string;
@@ -30,9 +31,10 @@ interface Submission {
 
 interface TAGradingViewProps {
   courseId: string;
+  isTeacher?: boolean;
 }
 
-export default function TAGradingView({ courseId }: TAGradingViewProps) {
+export default function TAGradingView({ courseId, isTeacher = false }: TAGradingViewProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -143,9 +145,11 @@ export default function TAGradingView({ courseId }: TAGradingViewProps) {
   };
 
   const handleFinalizeGrading = async (submissionId: string) => {
-    if (!confirm("Are you sure you want to finalize grading? This cannot be undone.")) return;
-
     try {
+      // First save the current grades
+      await handleSaveGrades(submissionId);
+
+      // Then finalize
       const { error } = await supabase
         .from('submissions')
         .update({ grading_finalized: true })
@@ -171,31 +175,81 @@ export default function TAGradingView({ courseId }: TAGradingViewProps) {
     }
   };
 
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Assignment deleted successfully",
+      });
+
+      setSelectedAssignment(null);
+      await loadAssignments();
+    } catch (error: any) {
+      console.error('Error deleting assignment:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete assignment",
+        variant: "destructive",
+      });
+    }
+  };
+
   const currentAssignment = assignments.find(a => a.id === selectedAssignment);
   const questions = currentAssignment?.questions || [];
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/40">
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">Select Assignment</CardTitle>
-          <CardDescription className="text-sm">Choose an assignment to grade submissions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {assignments.map((assignment) => (
-              <Button
-                key={assignment.id}
-                variant={selectedAssignment === assignment.id ? "default" : "outline"}
-                onClick={() => setSelectedAssignment(assignment.id)}
-                className="justify-start"
-              >
-                {assignment.title}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <Collapsible defaultOpen>
+        <CollapsibleTrigger asChild>
+          <Card className="border-border/40 cursor-pointer hover:bg-accent/5 transition-colors">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-medium">Select Assignment</CardTitle>
+                  <CardDescription className="text-sm">Choose an assignment to grade submissions</CardDescription>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+          </Card>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <Card className="border-border/40 mt-2">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {assignments.map((assignment) => (
+                  <div key={assignment.id} className="flex gap-1">
+                    <Button
+                      variant={selectedAssignment === assignment.id ? "default" : "outline"}
+                      onClick={() => setSelectedAssignment(assignment.id)}
+                      className="justify-start flex-1"
+                    >
+                      {assignment.title}
+                    </Button>
+                    {isTeacher && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteAssignment(assignment.id)}
+                        className="h-10 w-10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
 
       {selectedAssignment && (
         <div className="space-y-3">
@@ -259,24 +313,25 @@ export default function TAGradingView({ courseId }: TAGradingViewProps) {
                   {questions.length > 0 && (
                     <div className="space-y-3">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Grade Questions
+                        Grade Questions (Only Completed)
                       </label>
                       <div className="space-y-2">
-                        {questions.map((q) => (
-                          <div key={q.question_number} className="flex items-center gap-2">
-                            <span className="text-sm w-20">Q{q.question_number}</span>
-                            <Input
-                              type="number"
-                              min="0"
-                              max={q.max_marks}
-                              value={editingMarks[submission.id]?.[q.question_number] || 0}
-                              onChange={(e) => updateQuestionMark(submission.id, q.question_number, parseInt(e.target.value) || 0, q.max_marks)}
-                              disabled={submission.grading_finalized}
-                              className="w-24"
-                            />
-                            <span className="text-xs text-muted-foreground">/ {q.max_marks} marks</span>
-                          </div>
-                        ))}
+                        {questions
+                          .filter(q => submission.completed_questions.includes(q.question_number))
+                          .map((q) => (
+                            <div key={q.question_number} className="flex items-center gap-2">
+                              <span className="text-sm w-20">Q{q.question_number}</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                max={q.max_marks}
+                                value={editingMarks[submission.id]?.[q.question_number] || 0}
+                                onChange={(e) => updateQuestionMark(submission.id, q.question_number, parseInt(e.target.value) || 0, q.max_marks)}
+                                className="w-24"
+                              />
+                              <span className="text-xs text-muted-foreground">/ {q.max_marks} marks</span>
+                            </div>
+                          ))}
                         <div className="flex items-center justify-between pt-2 border-t text-sm font-semibold">
                           <span>Total</span>
                           <span>
@@ -287,16 +342,16 @@ export default function TAGradingView({ courseId }: TAGradingViewProps) {
                     </div>
                   )}
 
-                  {!submission.grading_finalized && (
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        onClick={() => handleSaveGrades(submission.id)}
-                        disabled={saving === submission.id}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        {saving === submission.id ? "Saving..." : "Save Grades"}
-                      </Button>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => handleSaveGrades(submission.id)}
+                      disabled={saving === submission.id}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      {saving === submission.id ? "Saving..." : "Save Grades"}
+                    </Button>
+                    {!submission.grading_finalized && (
                       <Button
                         onClick={() => handleFinalizeGrading(submission.id)}
                         className="flex-1"
@@ -304,8 +359,8 @@ export default function TAGradingView({ courseId }: TAGradingViewProps) {
                         <Check className="h-4 w-4 mr-1" />
                         Finalize Grading
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))
