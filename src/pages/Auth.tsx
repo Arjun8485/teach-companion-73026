@@ -71,61 +71,6 @@ export default function Auth() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    let assignedRole: 'teacher' | 'ta' | 'student' = 'student';
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (error) throw error;
-
-      // Automatically assign role based on email domain
-      if (data.user) {
-        const emailDomain = email.split('@')[1];
-        
-        if (emailDomain === 'teacher.uni') {
-          assignedRole = 'teacher';
-        } else if (emailDomain === 'ta.uni') {
-          assignedRole = 'ta';
-        }
-
-        // Assign role for BK80A4000 course
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            student_id: data.user.id,
-            role: assignedRole,
-            course_code: 'BK80A4000'
-          } as any);
-
-        if (roleError) {
-          console.error('Failed to assign role:', roleError);
-        }
-      }
-
-      toast.success("Account created successfully!");
-      
-      // Redirect based on role
-      if (assignedRole === 'ta' || assignedRole === 'teacher') {
-        navigate("/ta");
-      } else {
-        navigate("/");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign up");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -161,32 +106,17 @@ export default function Auth() {
                 className="h-10 border-border/40"
               />
             </div>
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading} className="flex-1 h-10">
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSignup}
-                disabled={loading}
-                className="flex-1 h-10 border-border/40"
-              >
-                {loading ? "Creating..." : "Sign Up"}
-              </Button>
-            </div>
+            <Button type="submit" disabled={loading} className="w-full h-10">
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
           </form>
 
           <div className="rounded-lg border border-border/40 bg-muted/30 p-4">
-            <p className="text-xs font-medium text-foreground mb-2">⚠️ First Time Setup - Create Test Accounts:</p>
-            <div className="space-y-1 text-xs text-muted-foreground mb-3">
+            <p className="text-xs font-medium text-foreground mb-2">📋 Pre-configured Test Accounts:</p>
+            <div className="space-y-1 text-xs text-muted-foreground">
               <p>👨‍🏫 Teacher: teacher@teacher.uni / Teacher2025!</p>
-              <p>👨‍🎓 TA: ta@ta.uni / TA2025!</p>
               <p>🎓 Student: student@student.uni / Student2025!</p>
             </div>
-            <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
-              👆 Use the Sign Up button above to create these accounts first, then you can Sign In.
-            </p>
           </div>
         </CardContent>
       </Card>
