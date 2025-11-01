@@ -22,8 +22,8 @@ export default function Auth() {
           .select('role')
           .eq('student_id', session.user.id);
 
-        const hasTA = roles?.some(r => r.role === 'ta');
-        const hasTeacher = roles?.some(r => r.role === 'teacher');
+        const hasTA = roles?.some((r: any) => r.role === 'ta');
+        const hasTeacher = roles?.some((r: any) => r.role === 'teacher');
 
         if (hasTA || hasTeacher) {
           navigate("/ta");
@@ -53,8 +53,8 @@ export default function Auth() {
           .select('role')
           .eq('student_id', data.user.id);
 
-        const hasTA = roles?.some(r => r.role === 'ta');
-        const hasTeacher = roles?.some(r => r.role === 'teacher');
+        const hasTA = roles?.some((r: any) => r.role === 'ta');
+        const hasTeacher = roles?.some((r: any) => r.role === 'teacher');
 
         toast.success("Logged in successfully!");
         
@@ -75,6 +75,8 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
+    let assignedRole: 'teacher' | 'ta' | 'student' = 'student';
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -89,12 +91,11 @@ export default function Auth() {
       // Automatically assign role based on email domain
       if (data.user) {
         const emailDomain = email.split('@')[1];
-        let role: 'teacher' | 'ta' | 'student' = 'student';
         
         if (emailDomain === 'teacher.uni') {
-          role = 'teacher';
+          assignedRole = 'teacher';
         } else if (emailDomain === 'ta.uni') {
-          role = 'ta';
+          assignedRole = 'ta';
         }
 
         // Assign role for BK80A4000 course
@@ -102,7 +103,7 @@ export default function Auth() {
           .from('user_roles')
           .insert({
             student_id: data.user.id,
-            role: role,
+            role: assignedRole,
             course_code: 'BK80A4000'
           } as any);
 
@@ -114,7 +115,7 @@ export default function Auth() {
       toast.success("Account created successfully!");
       
       // Redirect based on role
-      if (role === 'ta' || role === 'teacher') {
+      if (assignedRole === 'ta' || assignedRole === 'teacher') {
         navigate("/ta");
       } else {
         navigate("/");

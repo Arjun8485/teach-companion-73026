@@ -32,8 +32,8 @@ export default function TADashboard() {
 
       if (error) throw error;
 
-      const hasTA = roles?.some(r => r.role === 'ta');
-      const hasTeacher = roles?.some(r => r.role === 'teacher');
+      const hasTA = roles?.some((r: any) => r.role === 'ta');
+      const hasTeacher = roles?.some((r: any) => r.role === 'teacher');
 
       if (!hasTA && !hasTeacher) {
         toast.error("Access denied: TA or Teacher role required");
