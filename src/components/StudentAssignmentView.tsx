@@ -137,25 +137,30 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
         }
       } else {
         // It's a path, determine bucket based on path structure
-        // Submissions are in submission-files, assignments in assignment-files
         bucketId = filePath.includes('submission') ? 'submission-files' : 'assignment-files';
         path = filePath;
       }
 
-      // Get signed URL (valid for 1 hour) - works for both public and private buckets
+      // Get signed URL (valid for 1 hour)
       const { data, error } = await supabase.storage
         .from(bucketId)
         .createSignedUrl(path, 3600);
 
       if (error) throw error;
 
-      // Open signed URL in new tab
-      window.open(data.signedUrl, '_blank');
+      // Use anchor element to avoid browser blocking
+      const link = document.createElement('a');
+      link.href = data.signedUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error: any) {
       console.error('Error viewing PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to open PDF. Try disabling browser shields/blocking for this site.",
+        description: "Failed to open PDF: " + (error.message || "Unknown error"),
         variant: "destructive",
       });
     }
