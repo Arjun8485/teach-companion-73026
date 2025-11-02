@@ -52,7 +52,12 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
   const loadCourses = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found');
+        return;
+      }
+
+      console.log('Loading courses for user:', user.id, 'userType:', userType);
 
       if (userType === 'teacher') {
         // For teachers, fetch courses they're assigned to via user_roles
@@ -62,22 +67,29 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           .eq('student_id', user.id)
           .in('role', ['teacher', 'ta']);
 
+        console.log('Teacher roles query result:', { teacherRoles, teacherError });
+
         if (teacherError) {
           console.error('Error loading teacher roles:', teacherError);
           throw teacherError;
         }
 
         if (!teacherRoles || teacherRoles.length === 0) {
+          console.log('No teacher roles found');
           setCourses([]);
           return;
         }
 
         // Get course details
         const courseIds = teacherRoles.map(r => r.course_id);
+        console.log('Fetching courses for IDs:', courseIds);
+        
         const { data: courseDetails, error: courseError } = await supabase
           .from('courses')
           .select('id, name, department')
           .in('id', courseIds);
+
+        console.log('Course details query result:', { courseDetails, courseError });
 
         if (courseError) {
           console.error('Error loading course details:', courseError);
@@ -91,6 +103,7 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           isTA: false
         })) || [];
 
+        console.log('Final courses data for teacher:', coursesData);
         setCourses(coursesData);
       } else {
         // For students, fetch enrolled courses
@@ -99,22 +112,29 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           .select('course_id')
           .eq('student_id', user.id);
 
+        console.log('Student enrollments query result:', { enrollments, enrollmentError });
+
         if (enrollmentError) {
           console.error('Error loading enrollments:', enrollmentError);
           throw enrollmentError;
         }
 
         if (!enrollments || enrollments.length === 0) {
+          console.log('No enrollments found');
           setCourses([]);
           return;
         }
 
         // Get course details
         const courseIds = enrollments.map(e => e.course_id);
+        console.log('Fetching courses for IDs:', courseIds);
+        
         const { data: courseDetails, error: courseError } = await supabase
           .from('courses')
           .select('id, name, department')
           .in('id', courseIds);
+
+        console.log('Course details query result:', { courseDetails, courseError });
 
         if (courseError) {
           console.error('Error loading course details:', courseError);
@@ -128,6 +148,8 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           .eq('student_id', user.id)
           .eq('role', 'ta');
 
+        console.log('TA roles query result:', { taRoles, taError });
+
         if (taError) console.error('Error loading TA roles:', taError);
 
         const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
@@ -139,6 +161,7 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           isTA: taCourseIds.has(course.id)
         })) || [];
 
+        console.log('Final courses data for student:', coursesData);
         setCourses(coursesData);
       }
     } catch (error) {
