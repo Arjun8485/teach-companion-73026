@@ -13,7 +13,7 @@ import ExerciseSessionManager from "./ExerciseSessionManager";
 import StudentQRScanner from "./StudentQRScanner";
 import { useCourseAnalytics } from "@/hooks/useCourseAnalytics";
 import AssignmentAnalytics from "./AssignmentAnalytics";
-import { BarChart3, Users, FileText, CheckCircle2, TrendingUp, ArrowLeft, QrCode } from "lucide-react";
+import { BarChart3, Users, FileText, CheckCircle2, ArrowLeft, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CourseDetailViewProps {
@@ -106,12 +106,6 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
             <TabsTrigger value="roles" className="gap-1.5 text-xs">
               <Users className="h-3.5 w-3.5" />
               Roles
-            </TabsTrigger>
-          )}
-          {isTA && (
-            <TabsTrigger value="ta-overview" className="gap-1.5 text-xs">
-              <TrendingUp className="h-3.5 w-3.5" />
-              TA Overview
             </TabsTrigger>
           )}
           <TabsTrigger value="exercises" className="gap-1.5 text-xs">
@@ -210,59 +204,6 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
             </CardHeader>
             <CardContent>
               <StudentTAList courseCode={courseId} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        )}
-
-        {isTA && (
-          <TabsContent value="ta-overview" className="space-y-6 mt-8">
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard
-              title="TA Sessions"
-              value="24"
-              icon={<Users className="h-4 w-4" />}
-            />
-            <StatCard
-              title="Avg Attendance"
-              value="34"
-              icon={<CheckCircle2 className="h-4 w-4" />}
-            />
-            <StatCard
-              title="Completion Rate"
-              value="91%"
-              icon={<TrendingUp className="h-4 w-4" />}
-            />
-          </div>
-
-          <Card className="border-border/40">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">TA Session Analytics</CardTitle>
-              <CardDescription className="text-sm">Detailed data for TA-led sessions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Session 1: Introduction</p>
-                    <p className="text-xs text-muted-foreground">Monday 10:00-12:00 • Group A</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">38 students</p>
-                    <p className="text-xs text-success">95% attended</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Session 2: Problem Solving</p>
-                    <p className="text-xs text-muted-foreground">Tuesday 14:00-16:00 • Group B</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">32 students</p>
-                    <p className="text-xs text-success">89% attended</p>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
