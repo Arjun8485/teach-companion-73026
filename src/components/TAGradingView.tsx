@@ -169,21 +169,20 @@ export default function TAGradingView({ courseId, isTeacher = false }: TAGrading
         path = filePath;
       }
 
-      // Get signed URL (valid for 1 hour)
+      // Download file as blob to bypass browser blocking
       const { data, error } = await supabase.storage
         .from(bucketId)
-        .createSignedUrl(path, 3600);
+        .download(path);
 
       if (error) throw error;
 
-      // Use anchor element to avoid browser blocking
-      const link = document.createElement('a');
-      link.href = data.signedUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Create object URL from blob and open it
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      // Clean up after a delay
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error: any) {
       console.error('Error viewing PDF:', error);
       toast({
