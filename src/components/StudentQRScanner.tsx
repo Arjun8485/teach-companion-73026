@@ -81,20 +81,6 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     setScanning(true);
 
     try {
-      // First, explicitly request camera permissions on mobile
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" } 
-        });
-        // Stop the stream immediately, html5-qrcode will request it again
-        stream.getTracks().forEach(track => track.stop());
-      } catch (permError) {
-        console.error("Permission denied:", permError);
-        toast.error("Camera access denied. Please allow camera permissions in your browser settings.");
-        setScanning(false);
-        return;
-      }
-
       const html5Qrcode = new Html5Qrcode("qr-reader");
       
       await html5Qrcode.start(
@@ -108,9 +94,18 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
       );
       
       setScanner(html5Qrcode);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start scanner:", error);
-      toast.error("Failed to start camera. Please try again.");
+      
+      // Only show error toast if it's a real error, not just permission denied
+      if (error?.name === 'NotAllowedError') {
+        toast.error("Camera access denied. Please allow camera permissions in your browser settings.");
+      } else if (error?.name === 'NotFoundError') {
+        toast.error("No camera found on this device.");
+      } else {
+        toast.error("Failed to start camera. Please try again.");
+      }
+      
       setScanning(false);
     }
   };
@@ -171,8 +166,8 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
   };
 
   const onScanError = (error: any) => {
-    // Ignore scan errors, they're common during scanning
-    console.log("Scan error (normal):", error);
+    // Silently ignore scan errors - they're normal during the scanning process
+    // Only actual QR codes will trigger onScanSuccess
   };
 
   const verifyAttendance = async (token: string) => {
