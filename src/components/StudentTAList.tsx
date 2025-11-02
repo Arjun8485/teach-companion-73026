@@ -71,10 +71,28 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Fetch all user profiles
+      // Fetch enrolled student IDs for this course
+      const { data: enrollmentsData, error: enrollmentError } = await supabase
+        .from('course_enrollments')
+        .select('student_id')
+        .eq('course_id', courseCode);
+
+      if (enrollmentError) throw enrollmentError;
+
+      const enrolledStudentIds = enrollmentsData?.map(e => e.student_id) || [];
+
+      if (enrolledStudentIds.length === 0) {
+        setStudents([]);
+        setFilteredStudents([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles for enrolled students
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, email, full_name');
+        .select('id, email, full_name')
+        .in('id', enrolledStudentIds);
 
       if (profilesError) throw profilesError;
 
@@ -99,7 +117,7 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
       const taIds = new Set(taRoles?.map((r) => r.student_id) || []);
       const teacherIds = new Set(teacherRoles?.map((r) => r.student_id) || []);
 
-      // Filter out teachers and the current user from the list
+      // Filter out teachers from enrolled students
       const studentsList: Student[] = (profilesData || [])
         .filter((p) => !teacherIds.has(p.id)) // Exclude all teachers
         .map((p) => ({

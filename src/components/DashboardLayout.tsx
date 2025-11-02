@@ -29,7 +29,7 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
   useEffect(() => {
     loadUserData();
     loadCourses();
-  }, []);
+  }, [userType]);
 
   const loadUserData = async () => {
     try {
@@ -53,31 +53,66 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get all courses
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('courses')
-        .select('id, name, department')
-        .order('name');
+      if (userType === 'teacher') {
+        // For teachers, fetch courses they're responsible for
+        const { data: teacherCourses, error: teacherError } = await supabase
+          .from('teacher_courses')
+          .select(`
+            course_id,
+            courses (
+              id,
+              name,
+              department
+            )
+          `)
+          .eq('teacher_id', user.id);
 
-      if (coursesError) throw coursesError;
+        if (teacherError) throw teacherError;
 
-      // Get user's TA roles
-      const { data: taRoles, error: taError } = await supabase
-        .from('user_roles')
-        .select('course_id')
-        .eq('student_id', user.id)
-        .eq('role', 'ta');
+        const coursesData = teacherCourses?.map(tc => ({
+          id: tc.courses.id,
+          name: tc.courses.name,
+          department: tc.courses.department,
+          isTA: false
+        })) || [];
 
-      if (taError) throw taError;
+        setCourses(coursesData);
+      } else {
+        // For students, fetch enrolled courses
+        const { data: enrollments, error: enrollmentError } = await supabase
+          .from('course_enrollments')
+          .select(`
+            course_id,
+            courses (
+              id,
+              name,
+              department
+            )
+          `)
+          .eq('student_id', user.id);
 
-      const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
-      
-      const coursesWithRoles = (coursesData || []).map(course => ({
-        ...course,
-        isTA: taCourseIds.has(course.id)
-      }));
+        if (enrollmentError) throw enrollmentError;
 
-      setCourses(coursesWithRoles);
+        // Get user's TA roles
+        const { data: taRoles, error: taError } = await supabase
+          .from('user_roles')
+          .select('course_id')
+          .eq('student_id', user.id)
+          .eq('role', 'ta');
+
+        if (taError) throw taError;
+
+        const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
+
+        const coursesData = enrollments?.map(enrollment => ({
+          id: enrollment.courses.id,
+          name: enrollment.courses.name,
+          department: enrollment.courses.department,
+          isTA: taCourseIds.has(enrollment.courses.id)
+        })) || [];
+
+        setCourses(coursesData);
+      }
     } catch (error) {
       console.error('Error loading courses:', error);
     }
