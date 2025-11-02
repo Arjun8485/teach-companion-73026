@@ -118,13 +118,31 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
 
   const handleViewPDF = async (filePath: string, fileName: string) => {
     try {
-      // Extract bucket and path from the full URL
-      const url = new URL(filePath);
-      const pathParts = url.pathname.split('/');
-      const bucketId = pathParts[pathParts.indexOf('public') + 1];
-      const path = pathParts.slice(pathParts.indexOf(bucketId) + 1).join('/');
+      let bucketId: string;
+      let path: string;
 
-      // Get signed URL (valid for 1 hour)
+      // Check if it's a full URL or just a path
+      if (filePath.startsWith('http')) {
+        // Extract bucket and path from URL
+        const url = new URL(filePath);
+        const pathParts = url.pathname.split('/').filter(p => p);
+        
+        // URL format: .../storage/v1/object/public/bucket-name/path
+        const storageIndex = pathParts.indexOf('storage');
+        if (storageIndex !== -1 && pathParts[storageIndex + 3] === 'public') {
+          bucketId = pathParts[storageIndex + 4];
+          path = pathParts.slice(storageIndex + 5).join('/');
+        } else {
+          throw new Error('Invalid URL format');
+        }
+      } else {
+        // It's a path, determine bucket based on path structure
+        // Submissions are in submission-files, assignments in assignment-files
+        bucketId = filePath.includes('submission') ? 'submission-files' : 'assignment-files';
+        path = filePath;
+      }
+
+      // Get signed URL (valid for 1 hour) - works for both public and private buckets
       const { data, error } = await supabase.storage
         .from(bucketId)
         .createSignedUrl(path, 3600);
@@ -137,7 +155,7 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
       console.error('Error viewing PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to open PDF. Please try disabling your ad blocker for this site.",
+        description: "Failed to open PDF. Try disabling browser shields/blocking for this site.",
         variant: "destructive",
       });
     }
@@ -164,11 +182,8 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('submission-files')
-          .getPublicUrl(fileName);
-
-        fileUrl = publicUrl;
+        // Store just the path, not the public URL (private bucket)
+        fileUrl = fileName;
       }
 
       const completed = completedQuestions[assignmentId] || [];
