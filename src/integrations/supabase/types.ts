@@ -92,6 +92,53 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_sessions: {
+        Row: {
+          course_id: string
+          created_at: string
+          created_by: string
+          duration_minutes: number
+          id: string
+          is_recurring: boolean
+          recurrence_day_of_week: number | null
+          recurrence_time: string | null
+          scheduled_at: string
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          created_by: string
+          duration_minutes?: number
+          id?: string
+          is_recurring?: boolean
+          recurrence_day_of_week?: number | null
+          recurrence_time?: string | null
+          scheduled_at: string
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          duration_minutes?: number
+          id?: string
+          is_recurring?: boolean
+          recurrence_day_of_week?: number | null
+          recurrence_time?: string | null
+          scheduled_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -112,6 +159,38 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      session_attendance: {
+        Row: {
+          checked_in_at: string
+          id: string
+          session_id: string
+          student_id: string
+          verification_token: string
+        }
+        Insert: {
+          checked_in_at?: string
+          id?: string
+          session_id: string
+          student_id: string
+          verification_token: string
+        }
+        Update: {
+          checked_in_at?: string
+          id?: string
+          session_id?: string
+          student_id?: string
+          verification_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submissions: {
         Row: {

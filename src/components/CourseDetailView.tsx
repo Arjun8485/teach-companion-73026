@@ -9,6 +9,9 @@ import StudentTAList from "./StudentTAList";
 import StudentAssignmentView from "./StudentAssignmentView";
 import TeacherAssignmentCreate from "./TeacherAssignmentCreate";
 import TAGradingView from "./TAGradingView";
+import ExerciseSessionManager from "./ExerciseSessionManager";
+import StudentQRScanner from "./StudentQRScanner";
+import { useCourseAnalytics } from "@/hooks/useCourseAnalytics";
 import { BarChart3, Users, FileText, CheckCircle2, TrendingUp, ArrowLeft, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +28,7 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
   const [loading, setLoading] = useState(true);
   const [assignmentKey, setAssignmentKey] = useState(0);
   const { toast } = useToast();
+  const analytics = useCourseAnalytics(courseId);
 
   useEffect(() => {
     loadCourse();
@@ -120,27 +124,23 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Students"
-              value="142"
+              value={analytics.loading ? "..." : analytics.totalStudents.toString()}
               icon={<Users className="h-4 w-4" />}
-              trend={{ value: 8, positive: true }}
             />
             <StatCard
               title="Avg Attendance"
-              value="87%"
+              value={analytics.loading ? "..." : `${analytics.avgAttendance}%`}
               icon={<CheckCircle2 className="h-4 w-4" />}
-              trend={{ value: 3, positive: true }}
             />
             <StatCard
               title="Assignments Completed"
-              value="94%"
+              value={analytics.loading ? "..." : `${analytics.assignmentsCompleted}%`}
               icon={<FileText className="h-4 w-4" />}
-              trend={{ value: 5, positive: true }}
             />
             <StatCard
-              title="AI Verification Accuracy"
-              value="96%"
+              title="Upcoming Deadlines"
+              value={analytics.loading ? "..." : analytics.upcomingDeadlines.toString()}
               icon={<BarChart3 className="h-4 w-4" />}
-              trend={{ value: 2, positive: true }}
             />
           </div>
 
@@ -152,24 +152,30 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">High Performers</p>
-                  <p className="text-xs text-muted-foreground">Students scoring above 90%</p>
+                  <p className="text-sm font-medium text-foreground">Total Enrolled</p>
+                  <p className="text-xs text-muted-foreground">Students in this course</p>
                 </div>
-                <Badge className="bg-success/10 text-success border-success/20">45 students</Badge>
+                <Badge className="bg-primary/10 text-primary border-primary/20">
+                  {analytics.loading ? "..." : `${analytics.totalStudents} students`}
+                </Badge>
               </div>
               <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Needs Attention</p>
-                  <p className="text-xs text-muted-foreground">Students with 2+ missed sessions</p>
+                  <p className="text-sm font-medium text-foreground">Assignment Submission Rate</p>
+                  <p className="text-xs text-muted-foreground">Overall completion percentage</p>
                 </div>
-                <Badge className="bg-warning/10 text-warning border-warning/20">12 students</Badge>
+                <Badge className="bg-success/10 text-success border-success/20">
+                  {analytics.loading ? "..." : `${analytics.assignmentsCompleted}%`}
+                </Badge>
               </div>
               <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Average Completion Time</p>
-                  <p className="text-xs text-muted-foreground">Time to complete assignments</p>
+                  <p className="text-sm font-medium text-foreground">Attendance Rate</p>
+                  <p className="text-xs text-muted-foreground">Exercise session attendance</p>
                 </div>
-                <Badge variant="secondary" className="bg-muted">2.4 days</Badge>
+                <Badge variant="secondary" className="bg-muted">
+                  {analytics.loading ? "..." : `${analytics.avgAttendance}%`}
+                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -257,43 +263,11 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
         )}
 
         <TabsContent value="exercises" className="space-y-6 mt-8">
-          <Card className="border-border/40">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Exercise Class Management</CardTitle>
-              <CardDescription className="text-sm">QR code check-ins and AI homework verification</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between rounded-md border border-border/40 bg-card/50 p-5">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-foreground">Generate Check-in QR Code</h4>
-                  <p className="text-xs text-muted-foreground">Students scan to mark attendance</p>
-                </div>
-                <Button className="gap-2 h-9">
-                  <QrCode className="h-4 w-4" />
-                  Generate QR
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Homework Verification</h4>
-                <div className="rounded-md border border-border/40 bg-card/50 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground">Problem Set 2 - Group C</span>
-                    <Badge className="bg-primary/10 text-primary border-primary/20">AI Ready</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">42 submissions pending verification</p>
-                  <Button variant="outline" className="w-full h-9 border-border/40">Start AI Verification</Button>
-                </div>
-              </div>
-
-              <div className="rounded-md bg-primary/5 border border-primary/10 p-4">
-                <p className="text-sm font-medium text-foreground mb-1">💡 AI Tip</p>
-                <p className="text-xs text-muted-foreground">
-                  AI verification has 96% accuracy for mathematical problems. Review flagged submissions manually.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {isTA ? (
+            <ExerciseSessionManager courseId={courseId} />
+          ) : (
+            <StudentQRScanner courseId={courseId} />
+          )}
         </TabsContent>
       </Tabs>
     </div>
