@@ -53,7 +53,10 @@ export default function DynamicQRCode({ sessionId }: DynamicQRCodeProps) {
           <canvas ref={canvasRef} />
         </div>
         <p className="text-sm text-muted-foreground mt-4 text-center">
-          QR code updates every 2 seconds. Students must scan continuously for 3-5 seconds to register attendance.
+          QR code updates every 2 seconds. Students scan once - AI verifies it's from your physical display.
+        </p>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          🛡️ Screenshot detection enabled - only genuine scans are accepted
         </p>
       </CardContent>
     </Card>

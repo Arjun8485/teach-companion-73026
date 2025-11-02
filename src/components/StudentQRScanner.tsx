@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { useState, useEffect, useRef } from "react";
+import { Html5Qrcode, Html5QrcodeScanType } from "html5-qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,12 @@ interface AttendanceRecord {
 
 export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
   const [scanning, setScanning] = useState(false);
-  const [scannedTokens, setScannedTokens] = useState<string[]>([]);
   const [verifying, setVerifying] = useState(false);
-  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+  const [verifyingAI, setVerifyingAI] = useState(false);
+  const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     loadAttendanceHistory();
@@ -76,47 +77,83 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     }
   };
 
-  const startScanning = () => {
+  const startScanning = async () => {
     setScanning(true);
-    setScannedTokens([]);
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-        rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: true,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        videoConstraints: {
-          facingMode: "environment" // Use back camera on mobile
+    try {
+      const html5Qrcode = new Html5Qrcode("qr-reader");
+      
+      await html5Qrcode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
         },
-      },
-      false
-    );
-
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
-    setScanner(html5QrcodeScanner);
+        onScanSuccess,
+        onScanError
+      );
+      
+      setScanner(html5Qrcode);
+    } catch (error) {
+      console.error("Failed to start scanner:", error);
+      toast.error("Failed to access camera. Please grant camera permissions.");
+      setScanning(false);
+    }
   };
 
-  const onScanSuccess = (decodedText: string) => {
-    // Add token to scanned list
-    setScannedTokens((prev) => {
-      const newTokens = [...prev, decodedText];
+  const onScanSuccess = async (decodedText: string) => {
+    if (verifying || verifyingAI) return; // Prevent multiple simultaneous verifications
+    
+    try {
+      // Capture the current video frame
+      const canvas = document.createElement('canvas');
+      const video = document.querySelector('#qr-reader video') as HTMLVideoElement;
       
-      // Keep only last 3 scans (representing 6 seconds of scanning)
-      if (newTokens.length > 3) {
-        newTokens.shift();
+      if (!video) {
+        toast.error("Camera feed not available");
+        return;
       }
-
-      // If we have 3 consecutive valid scans, verify attendance
-      if (newTokens.length === 3) {
-        verifyAttendance(newTokens);
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        toast.error("Failed to capture image");
+        return;
       }
-
-      return newTokens;
-    });
+      
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      // Verify with AI that it's a physical QR code
+      setVerifyingAI(true);
+      toast.info("Verifying QR code authenticity...");
+      
+      const { data: aiResult, error: aiError } = await supabase.functions.invoke('verify-physical-qr', {
+        body: { imageData }
+      });
+      
+      setVerifyingAI(false);
+      
+      if (aiError) {
+        console.error("AI verification error:", aiError);
+        toast.error("Verification failed. Please try again.");
+        return;
+      }
+      
+      if (!aiResult.isPhysical) {
+        toast.error("Screenshot detected! Please scan the QR code from the actual display.");
+        return;
+      }
+      
+      // If AI confirms it's physical, proceed with attendance
+      await verifyAttendance(decodedText);
+      
+    } catch (error) {
+      console.error("Scan processing error:", error);
+      toast.error("Failed to process scan");
+      setVerifyingAI(false);
+    }
   };
 
   const onScanError = (error: any) => {
@@ -124,32 +161,22 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     console.log("Scan error (normal):", error);
   };
 
-  const verifyAttendance = async (tokens: string[]) => {
+  const verifyAttendance = async (token: string) => {
     if (verifying) return;
     
     setVerifying(true);
     
     try {
-      // Parse tokens
-      const parsedTokens = tokens.map((token) => {
-        const [sessionId, timestamp] = token.split(":");
-        return { sessionId, timestamp: parseInt(timestamp) };
-      });
+      // Parse token
+      const [sessionId, timestamp] = token.split(":");
+      const tokenTimestamp = parseInt(timestamp);
 
-      // Verify all tokens are from the same session
-      const sessionId = parsedTokens[0].sessionId;
-      const allSameSession = parsedTokens.every((t) => t.sessionId === sessionId);
-      
-      if (!allSameSession) {
-        throw new Error("Invalid QR codes detected");
-      }
-
-      // Verify tokens are sequential (within 10 seconds of each other)
-      const timestamps = parsedTokens.map((t) => t.timestamp).sort();
-      const timeDiff = timestamps[timestamps.length - 1] - timestamps[0];
+      // Verify token is recent (within 10 seconds)
+      const now = Date.now();
+      const timeDiff = now - tokenTimestamp;
       
       if (timeDiff > 10000) {
-        throw new Error("QR codes are too old. Please scan again.");
+        throw new Error("QR code expired. Please scan again.");
       }
 
       // Get current user
@@ -162,7 +189,7 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
         .insert({
           session_id: sessionId,
           student_id: user.id,
-          verification_token: tokens.join(","),
+          verification_token: token,
         });
 
       if (error) {
@@ -172,20 +199,18 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
         throw error;
       }
 
-      toast.success("Attendance recorded successfully!");
+      toast.success("✅ Attendance recorded successfully!");
       
       // Stop scanning
       if (scanner) {
-        scanner.clear();
+        await scanner.stop();
       }
       setScanning(false);
-      setScannedTokens([]);
       
       // Reload attendance history
       loadAttendanceHistory();
     } catch (error: any) {
       toast.error(error.message || "Failed to record attendance");
-      setScannedTokens([]);
     } finally {
       setVerifying(false);
     }
@@ -201,7 +226,7 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
           </CardTitle>
           <CardDescription>
             Scan the QR code displayed by your instructor to mark your attendance. 
-            Hold your phone steady and keep scanning for a few seconds.
+            Make sure to scan from the actual display - screenshots will be detected and rejected.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -225,43 +250,36 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
             <>
               <div id="qr-reader" className="w-full rounded-lg overflow-hidden"></div>
               
-              <div className="space-y-3 rounded-lg border bg-muted/50 p-4">
-                <p className="text-sm font-medium text-center">
-                  Scanning progress
-                </p>
-                <div className="flex justify-center gap-3">
-                  {[1, 2, 3].map((num) => (
-                    <div
-                      key={num}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                        scannedTokens.length >= num
-                          ? "bg-primary text-primary-foreground scale-110"
-                          : "bg-background border-2 border-muted-foreground/20"
-                      }`}
-                    >
-                      {scannedTokens.length >= num ? (
-                        <CheckCircle className="w-6 h-6" />
-                      ) : (
-                        <span className="text-sm font-medium text-muted-foreground">{num}</span>
-                      )}
-                    </div>
-                  ))}
+              {(verifying || verifyingAI) && (
+                <div className="space-y-3 rounded-lg border bg-primary/5 p-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    <p className="text-sm font-medium">
+                      {verifyingAI ? "Verifying QR authenticity with AI..." : "Recording attendance..."}
+                    </p>
+                  </div>
                 </div>
+              )}
+
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
                 <p className="text-xs text-muted-foreground text-center">
-                  {scannedTokens.length === 0 && "Point your camera at the QR code"}
-                  {scannedTokens.length > 0 && scannedTokens.length < 3 && "Keep scanning..."}
-                  {scannedTokens.length === 3 && verifying && "Verifying attendance..."}
+                  📱 Point your camera at the QR code on the instructor's screen
+                </p>
+                <p className="text-xs text-muted-foreground text-center">
+                  🚫 Screenshots and photos will be automatically detected and rejected
                 </p>
               </div>
 
               <Button
                 variant="outline"
-                onClick={() => {
-                  if (scanner) scanner.clear();
+                onClick={async () => {
+                  if (scanner) {
+                    await scanner.stop();
+                  }
                   setScanning(false);
-                  setScannedTokens([]);
                 }}
                 className="w-full"
+                disabled={verifying || verifyingAI}
               >
                 Cancel Scanning
               </Button>
