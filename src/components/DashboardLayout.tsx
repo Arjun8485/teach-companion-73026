@@ -55,9 +55,9 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
       if (!user) return;
 
       if (userType === 'teacher') {
-        // For teachers, fetch courses they're responsible for
-        const { data: teacherCourses, error: teacherError } = await supabase
-          .from('teacher_courses')
+        // For teachers, fetch courses they're assigned to via user_roles
+        const { data: teacherRoles, error: teacherError } = await supabase
+          .from('user_roles')
           .select(`
             course_id,
             courses (
@@ -66,14 +66,15 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
               department
             )
           `)
-          .eq('teacher_id', user.id);
+          .eq('student_id', user.id)
+          .in('role', ['teacher', 'ta']);
 
         if (teacherError) throw teacherError;
 
-        const coursesData = teacherCourses?.map(tc => ({
-          id: tc.courses.id,
-          name: tc.courses.name,
-          department: tc.courses.department,
+        const coursesData = teacherRoles?.map(tr => ({
+          id: tr.courses.id,
+          name: tr.courses.name,
+          department: tr.courses.department,
           isTA: false
         })) || [];
 
