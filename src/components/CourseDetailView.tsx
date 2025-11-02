@@ -12,6 +12,7 @@ import TAGradingView from "./TAGradingView";
 import ExerciseSessionManager from "./ExerciseSessionManager";
 import StudentQRScanner from "./StudentQRScanner";
 import { useCourseAnalytics } from "@/hooks/useCourseAnalytics";
+import AssignmentAnalytics from "./AssignmentAnalytics";
 import { BarChart3, Users, FileText, CheckCircle2, TrendingUp, ArrowLeft, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -143,6 +144,11 @@ export default function CourseDetailView({ courseId, isTA, isTeacher, onBack }: 
               icon={<BarChart3 className="h-4 w-4" />}
             />
           </div>
+
+          <AssignmentAnalytics 
+            assignments={analytics.assignmentDetails} 
+            totalStudents={analytics.totalStudents}
+          />
 
           <Card className="border-border/40">
             <CardHeader>

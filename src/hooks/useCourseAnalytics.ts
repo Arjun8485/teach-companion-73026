@@ -1,11 +1,22 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface AssignmentAnalytics {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  totalSubmissions: number;
+  gradedSubmissions: number;
+  avgMarks: number;
+  maxMarks: number;
+}
+
 interface CourseAnalytics {
   totalStudents: number;
   avgAttendance: number;
   assignmentsCompleted: number;
   upcomingDeadlines: number;
+  assignmentDetails: AssignmentAnalytics[];
   loading: boolean;
 }
 
@@ -15,6 +26,7 @@ export function useCourseAnalytics(courseId: string): CourseAnalytics {
     avgAttendance: 0,
     assignmentsCompleted: 0,
     upcomingDeadlines: 0,
+    assignmentDetails: [],
     loading: true,
   });
 
@@ -33,27 +45,47 @@ export function useCourseAnalytics(courseId: string): CourseAnalytics {
 
       if (studentsError) throw studentsError;
 
-      // Get total assignments for the course
+      // Get assignments with detailed analytics
       const { data: assignments, error: assignmentsError } = await supabase
         .from("assignments")
-        .select("id")
+        .select("id, title, due_date, max_marks")
         .eq("course_id", courseId);
 
       if (assignmentsError) throw assignmentsError;
 
-      // Get total submissions
-      const assignmentIds = assignments?.map((a) => a.id) || [];
+      // Get detailed analytics for each assignment
+      const assignmentDetails: AssignmentAnalytics[] = [];
+      let totalSubmissions = 0;
       
-      let submissionsCount = 0;
-      if (assignmentIds.length > 0) {
-        const { count, error: submissionsError } = await supabase
-          .from("submissions")
-          .select("*", { count: "exact", head: true })
-          .in("assignment_id", assignmentIds);
+      if (assignments && assignments.length > 0) {
+        for (const assignment of assignments) {
+          const { data: submissions } = await supabase
+            .from("submissions")
+            .select("total_marks, grading_finalized")
+            .eq("assignment_id", assignment.id);
 
-        if (submissionsError) throw submissionsError;
-        submissionsCount = count || 0;
+          const submissionCount = submissions?.length || 0;
+          totalSubmissions += submissionCount;
+          
+          const gradedCount = submissions?.filter(s => s.grading_finalized).length || 0;
+          const totalMarks = submissions
+            ?.filter(s => s.grading_finalized && s.total_marks != null)
+            .reduce((sum, s) => sum + (s.total_marks || 0), 0) || 0;
+          const avgMarks = gradedCount > 0 ? Math.round(totalMarks / gradedCount) : 0;
+
+          assignmentDetails.push({
+            id: assignment.id,
+            title: assignment.title,
+            dueDate: assignment.due_date,
+            totalSubmissions: submissionCount,
+            gradedSubmissions: gradedCount,
+            avgMarks,
+            maxMarks: assignment.max_marks || 0,
+          });
+        }
       }
+
+      const assignmentIds = assignments?.map((a) => a.id) || [];
 
       // Get attendance data
       const { data: sessions } = await supabase
@@ -83,7 +115,7 @@ export function useCourseAnalytics(courseId: string): CourseAnalytics {
         : 0;
 
       const assignmentsCompleted = totalAssignments > 0 && totalStudents > 0
-        ? Math.round((submissionsCount / (totalAssignments * totalStudents)) * 100)
+        ? Math.round((totalSubmissions / (totalAssignments * totalStudents)) * 100)
         : 0;
 
       // Get upcoming deadlines (assignments due in next 7 days)
@@ -102,6 +134,7 @@ export function useCourseAnalytics(courseId: string): CourseAnalytics {
         avgAttendance,
         assignmentsCompleted,
         upcomingDeadlines: upcomingCount || 0,
+        assignmentDetails,
         loading: false,
       });
     } catch (error) {
