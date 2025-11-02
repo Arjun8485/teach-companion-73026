@@ -141,25 +141,31 @@ export default function StudentAssignmentView({ courseId }: StudentAssignmentVie
         path = filePath;
       }
 
-      // Download file as blob to bypass browser blocking
+      // Download file as blob
       const { data, error } = await supabase.storage
         .from(bucketId)
         .download(path);
 
       if (error) throw error;
 
-      // Create object URL from blob and open it
+      // Create download link
       const blob = new Blob([data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
       
-      // Clean up after a delay
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully",
+      });
     } catch (error: any) {
       console.error('Error viewing PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to open PDF: " + (error.message || "Unknown error"),
+        description: "Failed to download PDF: " + (error.message || "Unknown error"),
         variant: "destructive",
       });
     }
