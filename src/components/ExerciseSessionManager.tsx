@@ -245,47 +245,53 @@ export default function ExerciseSessionManager({ courseId }: ExerciseSessionMana
       )}
 
       <div className="space-y-4">
-        {sessions.map((session) => {
-          const active = isSessionActive(session);
-          return (
-            <Card key={session.id} className={active ? "border-primary" : ""}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {session.title}
-                      {active && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
-                          ACTIVE
+        {sessions.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              No exercise sessions yet. Create one to start taking attendance.
+            </CardContent>
+          </Card>
+        ) : (
+          sessions.map((session) => {
+            const active = isSessionActive(session);
+            return (
+              <Card key={session.id} className={active ? "border-primary" : ""}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {session.title}
+                        {active && (
+                          <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
+                            ACTIVE
+                          </span>
+                        )}
+                      </CardTitle>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {session.is_recurring
+                            ? `Every ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][session.recurrence_day_of_week || 0]}`
+                            : format(new Date(session.scheduled_at), "MMM d, yyyy")}
                         </span>
-                      )}
-                    </CardTitle>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {session.is_recurring
-                          ? `Every ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][session.recurrence_day_of_week || 0]}`
-                          : format(new Date(session.scheduled_at), "MMM d, yyyy")}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {session.is_recurring
-                          ? session.recurrence_time
-                          : format(new Date(session.scheduled_at), "HH:mm")}
-                      </span>
-                      <span>{session.duration_minutes} min</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {session.is_recurring
+                            ? session.recurrence_time
+                            : format(new Date(session.scheduled_at), "HH:mm")}
+                        </span>
+                        <span>{session.duration_minutes} min</span>
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteSession(session.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteSession(session.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              {active && (
+                </CardHeader>
                 <CardContent>
                   {activeSessionId === session.id ? (
                     <>
@@ -307,10 +313,10 @@ export default function ExerciseSessionManager({ courseId }: ExerciseSessionMana
                     </Button>
                   )}
                 </CardContent>
-              )}
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );
