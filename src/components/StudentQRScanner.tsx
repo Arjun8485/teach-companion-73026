@@ -78,11 +78,26 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
   };
 
   const startScanning = async () => {
+    console.log("Starting camera scan...");
     setScanning(true);
 
     try {
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported on this device");
+      }
+
+      // Check if the qr-reader element exists
+      const readerElement = document.getElementById("qr-reader");
+      if (!readerElement) {
+        console.error("QR reader element not found");
+        throw new Error("Camera viewer not ready");
+      }
+
+      console.log("Initializing Html5Qrcode...");
       const html5Qrcode = new Html5Qrcode("qr-reader");
       
+      console.log("Starting camera stream...");
       await html5Qrcode.start(
         { facingMode: "environment" },
         {
@@ -93,17 +108,23 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
         onScanError
       );
       
+      console.log("Camera started successfully");
       setScanner(html5Qrcode);
     } catch (error: any) {
-      console.error("Failed to start scanner:", error);
+      console.error("Camera start error:", error);
+      console.error("Error details:", { name: error?.name, message: error?.message, stack: error?.stack });
       
-      // Only show error toast if it's a real error, not just permission denied
-      if (error?.name === 'NotAllowedError') {
+      // Provide specific error messages
+      if (error?.name === 'NotAllowedError' || error?.message?.includes('Permission')) {
         toast.error("Camera access denied. Please allow camera permissions in your browser settings.");
-      } else if (error?.name === 'NotFoundError') {
+      } else if (error?.name === 'NotFoundError' || error?.message?.includes('not found')) {
         toast.error("No camera found on this device.");
+      } else if (error?.name === 'NotReadableError') {
+        toast.error("Camera is already in use by another application.");
+      } else if (error?.message?.includes('not supported')) {
+        toast.error("Camera is not supported on this device.");
       } else {
-        toast.error("Failed to start camera. Please try again.");
+        toast.error(`Failed to start camera: ${error?.message || 'Unknown error'}`);
       }
       
       setScanning(false);
