@@ -42,6 +42,12 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     };
   }, [scanner]);
 
+  useEffect(() => {
+    if (scanning && !scanner) {
+      initializeScanner();
+    }
+  }, [scanning]);
+
   const loadAttendanceHistory = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -77,15 +83,20 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     }
   };
 
-  const startScanning = async () => {
-    console.log("Starting camera scan...");
+  const startScanning = () => {
+    console.log("Activating camera...");
     setScanning(true);
+  };
 
+  const initializeScanner = async () => {
     try {
       // Check if mediaDevices is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera not supported on this device");
       }
+
+      // Wait a bit for the DOM to render
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check if the qr-reader element exists
       const readerElement = document.getElementById("qr-reader");
@@ -128,6 +139,7 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
       }
       
       setScanning(false);
+      setScanner(null);
     }
   };
 
