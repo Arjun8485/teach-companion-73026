@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,10 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
         aspectRatio: 1.0,
         rememberLastUsedCamera: true,
         showTorchButtonIfSupported: true,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        videoConstraints: {
+          facingMode: "environment" // Use back camera on mobile
+        },
       },
       false
     );
@@ -116,7 +120,8 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
   };
 
   const onScanError = (error: any) => {
-    // Ignore scan errors, they're common
+    // Ignore scan errors, they're common during scanning
+    console.log("Scan error (normal):", error);
   };
 
   const verifyAttendance = async (tokens: string[]) => {
