@@ -32,6 +32,52 @@ export function useCourseAnalytics(courseId: string): CourseAnalytics {
 
   useEffect(() => {
     loadAnalytics();
+
+    // Set up real-time subscriptions for submissions, assignments, and attendance
+    const channel = supabase
+      .channel('analytics-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'submissions'
+        },
+        () => {
+          console.log('Submissions updated, reloading analytics');
+          loadAnalytics();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignments',
+          filter: `course_id=eq.${courseId}`
+        },
+        () => {
+          console.log('Assignments updated, reloading analytics');
+          loadAnalytics();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'session_attendance'
+        },
+        () => {
+          console.log('Attendance updated, reloading analytics');
+          loadAnalytics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [courseId]);
 
   const loadAnalytics = async () => {
