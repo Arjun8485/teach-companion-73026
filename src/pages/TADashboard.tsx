@@ -73,18 +73,18 @@ export default function TADashboard() {
           onBack={() => setSelectedCourse(null)}
         />
       ) : (
-        <div className="p-6 max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+        <div className="p-4 sm:p-6 2xl:p-8 max-w-7xl 2xl:max-w-[1600px] mx-auto">
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl 2xl:text-4xl font-bold text-foreground mb-2">
               {isTeacher ? "Teacher's Dashboard" : "TA Dashboard"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base 2xl:text-lg text-muted-foreground">
               Select a course from the sidebar to manage materials, assignments, and students
             </p>
           </div>
           <Card>
-            <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground">Select a course from the sidebar to get started</p>
+            <CardContent className="p-8 sm:p-12 2xl:p-16 text-center">
+              <p className="text-sm sm:text-base 2xl:text-lg text-muted-foreground">Select a course from the sidebar to get started</p>
             </CardContent>
           </Card>
         </div>

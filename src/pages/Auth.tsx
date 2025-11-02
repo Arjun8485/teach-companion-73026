@@ -72,49 +72,49 @@ export default function Auth() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4 md:p-6">
       <Card className="w-full max-w-md border-border/40">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-primary" />
+        <CardHeader className="space-y-2 sm:space-y-3 text-center px-4 sm:px-6">
+          <div className="mx-auto w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome to TeachCompanion</CardTitle>
-          <CardDescription>Sign in to access your courses and materials</CardDescription>
+          <CardTitle className="text-xl sm:text-2xl 2xl:text-3xl">Welcome to TeachCompanion</CardTitle>
+          <CardDescription className="text-sm 2xl:text-base">Sign in to access your courses and materials</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleLogin} className="space-y-4">
+        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Email</label>
+              <label className="text-sm 2xl:text-base font-medium text-foreground">Email</label>
               <Input
                 type="email"
                 placeholder="name@role.uni"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-10 border-border/40"
+                className="h-10 sm:h-11 2xl:h-12 text-sm 2xl:text-base border-border/40"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Password</label>
+              <label className="text-sm 2xl:text-base font-medium text-foreground">Password</label>
               <Input
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-10 border-border/40"
+                className="h-10 sm:h-11 2xl:h-12 text-sm 2xl:text-base border-border/40"
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full h-10">
+            <Button type="submit" disabled={loading} className="w-full h-10 sm:h-11 2xl:h-12 text-sm 2xl:text-base">
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          <div className="rounded-lg border border-border/40 bg-muted/30 p-4">
-            <p className="text-xs font-medium text-foreground mb-2">📋 Pre-configured Test Accounts:</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>👨‍🏫 Teacher: teacher@teacher.uni / Teacher2025!</p>
-              <p>🎓 Student: student@student.uni / Student2025!</p>
+          <div className="rounded-lg border border-border/40 bg-muted/30 p-3 sm:p-4">
+            <p className="text-xs 2xl:text-sm font-medium text-foreground mb-2">📋 Pre-configured Test Accounts:</p>
+            <div className="space-y-1 text-xs 2xl:text-sm text-muted-foreground">
+              <p className="break-all">👨‍🏫 Teacher: teacher@teacher.uni / Teacher2025!</p>
+              <p className="break-all">🎓 Student: student@student.uni / Student2025!</p>
             </div>
           </div>
         </CardContent>
