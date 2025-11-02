@@ -83,17 +83,30 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
         // For students, fetch enrolled courses
         const { data: enrollments, error: enrollmentError } = await supabase
           .from('course_enrollments')
-          .select(`
-            course_id,
-            courses (
-              id,
-              name,
-              department
-            )
-          `)
+          .select('course_id')
           .eq('student_id', user.id);
 
-        if (enrollmentError) throw enrollmentError;
+        if (enrollmentError) {
+          console.error('Error loading enrollments:', enrollmentError);
+          throw enrollmentError;
+        }
+
+        if (!enrollments || enrollments.length === 0) {
+          setCourses([]);
+          return;
+        }
+
+        // Get course details
+        const courseIds = enrollments.map(e => e.course_id);
+        const { data: courseDetails, error: courseError } = await supabase
+          .from('courses')
+          .select('id, name, department')
+          .in('id', courseIds);
+
+        if (courseError) {
+          console.error('Error loading course details:', courseError);
+          throw courseError;
+        }
 
         // Get user's TA roles
         const { data: taRoles, error: taError } = await supabase
@@ -102,15 +115,15 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
           .eq('student_id', user.id)
           .eq('role', 'ta');
 
-        if (taError) throw taError;
+        if (taError) console.error('Error loading TA roles:', taError);
 
         const taCourseIds = new Set(taRoles?.map(r => r.course_id) || []);
 
-        const coursesData = enrollments?.map(enrollment => ({
-          id: enrollment.courses.id,
-          name: enrollment.courses.name,
-          department: enrollment.courses.department,
-          isTA: taCourseIds.has(enrollment.courses.id)
+        const coursesData = courseDetails?.map(course => ({
+          id: course.id,
+          name: course.name,
+          department: course.department,
+          isTA: taCourseIds.has(course.id)
         })) || [];
 
         setCourses(coursesData);
