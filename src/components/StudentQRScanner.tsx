@@ -81,6 +81,20 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
     setScanning(true);
 
     try {
+      // First, explicitly request camera permissions on mobile
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" } 
+        });
+        // Stop the stream immediately, html5-qrcode will request it again
+        stream.getTracks().forEach(track => track.stop());
+      } catch (permError) {
+        console.error("Permission denied:", permError);
+        toast.error("Camera access denied. Please allow camera permissions in your browser settings.");
+        setScanning(false);
+        return;
+      }
+
       const html5Qrcode = new Html5Qrcode("qr-reader");
       
       await html5Qrcode.start(
@@ -96,7 +110,7 @@ export default function StudentQRScanner({ courseId }: StudentQRScannerProps) {
       setScanner(html5Qrcode);
     } catch (error) {
       console.error("Failed to start scanner:", error);
-      toast.error("Failed to access camera. Please grant camera permissions.");
+      toast.error("Failed to start camera. Please try again.");
       setScanning(false);
     }
   };
