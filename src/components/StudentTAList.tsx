@@ -67,7 +67,11 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
     try {
       setLoading(true);
 
-      // Fetch all user profiles (all students have access to all courses now)
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Fetch all user profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, full_name');
@@ -83,15 +87,28 @@ export default function StudentTAList({ courseCode }: StudentTAListProps) {
 
       if (taError) throw taError;
 
-      const taIds = new Set(taRoles?.map((r) => r.student_id) || []);
+      // Fetch teacher roles for this course
+      const { data: teacherRoles, error: teacherError } = await supabase
+        .from('user_roles')
+        .select('student_id')
+        .eq('course_id', courseCode)
+        .eq('role', 'teacher');
 
-      const studentsList: Student[] = (profilesData || []).map((p) => ({
-        id: p.id,
-        name: p.full_name || p.email,
-        email: p.email,
-        student_id: p.id,
-        isTA: taIds.has(p.id),
-      }));
+      if (teacherError) throw teacherError;
+
+      const taIds = new Set(taRoles?.map((r) => r.student_id) || []);
+      const teacherIds = new Set(teacherRoles?.map((r) => r.student_id) || []);
+
+      // Filter out teachers and the current user from the list
+      const studentsList: Student[] = (profilesData || [])
+        .filter((p) => !teacherIds.has(p.id)) // Exclude all teachers
+        .map((p) => ({
+          id: p.id,
+          name: p.full_name || p.email,
+          email: p.email,
+          student_id: p.id,
+          isTA: taIds.has(p.id),
+        }));
 
       setStudents(studentsList);
       setFilteredStudents(studentsList);
