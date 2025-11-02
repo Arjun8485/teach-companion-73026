@@ -58,23 +58,36 @@ export default function DashboardLayout({ children, selectedCourse, onCourseSele
         // For teachers, fetch courses they're assigned to via user_roles
         const { data: teacherRoles, error: teacherError } = await supabase
           .from('user_roles')
-          .select(`
-            course_id,
-            courses (
-              id,
-              name,
-              department
-            )
-          `)
+          .select('course_id, role')
           .eq('student_id', user.id)
           .in('role', ['teacher', 'ta']);
 
-        if (teacherError) throw teacherError;
+        if (teacherError) {
+          console.error('Error loading teacher roles:', teacherError);
+          throw teacherError;
+        }
 
-        const coursesData = teacherRoles?.map(tr => ({
-          id: tr.courses.id,
-          name: tr.courses.name,
-          department: tr.courses.department,
+        if (!teacherRoles || teacherRoles.length === 0) {
+          setCourses([]);
+          return;
+        }
+
+        // Get course details
+        const courseIds = teacherRoles.map(r => r.course_id);
+        const { data: courseDetails, error: courseError } = await supabase
+          .from('courses')
+          .select('id, name, department')
+          .in('id', courseIds);
+
+        if (courseError) {
+          console.error('Error loading course details:', courseError);
+          throw courseError;
+        }
+
+        const coursesData = courseDetails?.map(course => ({
+          id: course.id,
+          name: course.name,
+          department: course.department,
           isTA: false
         })) || [];
 
